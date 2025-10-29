@@ -25,4 +25,9 @@ export default defineNuxtConfig({
      */
     componentDir: './components/ui'
   },
+  nitro: {
+    experimental: {
+      websocket: true
+    }
+  },
 })
