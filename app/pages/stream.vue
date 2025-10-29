@@ -5,44 +5,63 @@ import { useStreamerStore } from '~/state/streamer';
 
 const streamerStore = useStreamerStore()
 const videofeedRef = ref<HTMLVideoElement|null>(null);
-const { send, data, ws } = useWebSocket('ws://localhost:3000/ws/signaling', {
+const localStream = ref<MediaStream|null>(null);
+
+const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
   autoReconnect: true,
-  //heartbeat: true,
   onMessage: async (ws, ev) => {
     const message = JSON.parse(ev.data)
+    
     if (message.event === 'room-created') {
-      const roomId = message.roomId
-      streamerStore.setCode(roomId)
+      streamerStore.setCode(message.roomId)
     }
+    
     if (message.event === 'viewer-joined') {
       const peerConnection = new RTCPeerConnection({
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
       });
-      streamerStore.addPeerConnection(message.data.viewerId, peerConnection)
+      streamerStore.addPeerConnection(message.viewerId, peerConnection)
+
+      // Add media tracks to peer connection
+      if (localStream.value) {
+        localStream.value.getTracks().forEach(track => {
+          peerConnection.addTrack(track, localStream.value!);
+        });
+      }
+
+      // Handle ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          send(JSON.stringify({
+            event: 'ice-candidate',
+            targetId: message.viewerId,
+            candidate: event.candidate,
+          }))
+        }
+      };
 
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
+      
       send(JSON.stringify({
         event: 'offer',
-        targetId: message.data.viewerId,
+        targetId: message.viewerId,
         sdp: offer,
       }))
     }
+    
     if (message.event === 'ice-candidate') {
-      ws.send(JSON.stringify({
-        event: 'ice-candidate',
-        targetId: message.data.senderId,
-        candidate: message.data.candidate,
-      }))
+      const pc = streamerStore.peerConnections[message.from];
+      if (pc) {
+        await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+      }
     }
+    
     if (message.event === 'answer') {
-      const pc = streamerStore.peerConnections[message.data.viewerId];
-      if (!pc) {
-        console.error('peerconnection not found for peerid: ', message.data.viewerId);
-        return;
-      };
-      const remoteDesc = new RTCSessionDescription(message.data.sdp);
-      await pc.setRemoteDescription(remoteDesc);
+      const pc = streamerStore.peerConnections[message.from];
+      if (pc) {
+        await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
+      }
     }
   },
 });
@@ -52,6 +71,8 @@ async function startScreenShare() {
     video: true,
     audio: false,
   });
+
+  localStream.value = stream;
 
   if (videofeedRef.value) {
     videofeedRef.value.srcObject = stream;
