@@ -3,6 +3,7 @@ import { useWebSocket } from '@vueuse/core';
 import { useViewerStore } from '~/state/viewer';
 import { Button } from "@/components/ui/button"
 import { toast } from 'vue-sonner';
+import { useWebSocketUrl } from '~/composables/useWebSocketUrl';
 
 const viewerStore = useViewerStore()
 const { code: codeRef } = storeToRefs(viewerStore)

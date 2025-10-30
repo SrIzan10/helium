@@ -2,6 +2,7 @@
 import { useWebSocket } from '@vueuse/core';
 import { Button } from "@/components/ui/button"
 import { useStreamerStore } from '~/state/streamer';
+import { useWebSocketUrl } from '~/composables/useWebSocketUrl';
 
 const streamerStore = useStreamerStore()
 const videofeedRef = ref<HTMLVideoElement|null>(null);
