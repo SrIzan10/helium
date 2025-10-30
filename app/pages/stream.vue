@@ -9,6 +9,10 @@ const localStream = ref<MediaStream|null>(null);
 
 const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
   autoReconnect: true,
+  heartbeat: {
+    message: JSON.stringify({ event: 'ping' }),
+    interval: 15000,
+  },
   onMessage: async (ws, ev) => {
     const message = JSON.parse(ev.data)
     
@@ -18,7 +22,11 @@ const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
     
     if (message.event === 'viewer-joined') {
       const peerConnection = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+        ],
+        iceCandidatePoolSize: 10
       });
       streamerStore.addPeerConnection(message.viewerId, peerConnection)
 
@@ -85,9 +93,11 @@ async function startScreenShare() {
 </script>
 
 <template>
+  <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
     <Button @click="startScreenShare">
-        screenshare
+      screenshare
     </Button>
-    <p>Your stream code: {{ streamerStore.code }}</p>
+    <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
     <video ref="videofeedRef" autoplay playsinline muted></video>
+  </div>
 </template>

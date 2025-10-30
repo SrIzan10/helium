@@ -8,7 +8,10 @@ const viewerStore = useViewerStore()
 const { code: codeRef } = storeToRefs(viewerStore)
 const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
   autoReconnect: true,
-  //heartbeat: true,
+  heartbeat: {
+    message: JSON.stringify({ event: 'ping' }),
+    interval: 15000,
+  },
   onMessage: async (ws, ev) => {
     const message = JSON.parse(ev.data)
     if (message.event === 'joined') {
@@ -18,7 +21,9 @@ const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
       const peerConnection = new RTCPeerConnection({
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
         ],
+        iceCandidatePoolSize: 10
       });
       viewerStore.setPeerConnection(peerConnection);
       
@@ -76,13 +81,14 @@ watch(codeRef, (newCode) => {
 </script>
 
 <template>
+  <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
   <h1>helium</h1>
   <p>effortless screensharing powered by webrtc</p>
-  <p>code is {{ viewerStore.code }}</p>
   <app-code-input />
 
-   <video ref="videofeedRef" autoplay playsinline style="width: 100%; max-width: 1200px; background: black;"></video>
+  <video ref="videofeedRef" autoplay playsinline controls style="width: 100%; max-width: 1200px; background: black;"></video>
 
   <NuxtLink to="/stream"><Button>host instead?</Button></NuxtLink>
+  </div>
 </template>
  

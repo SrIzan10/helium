@@ -24,16 +24,23 @@ async function getAllRoomIds() {
 }
 
 export default defineWebSocketHandler({
-  open(peer) {
+  async open(peer) {
     activePeers.set(peer.id, peer);
+    await client.hset('peers', peer.id, Date.now().toString());
     console.log('[ws] peer connected', peer.id);
   },
 
   async message(peer, message) {
+    await client.hset('peers', peer.id, Date.now().toString());
+    
     // TODO: proper typing
     const msg = message.json() as any;
     console.log("[ws] message", peer.id, msg);
 
+    if (msg.event === 'ping') {
+      peer.send(JSON.stringify({ event: 'pong' }));
+      return;
+    }
     if (msg.event === 'create-room') {
       const roomId = generateRoomId();
       await saveRoom(roomId, { broadcaster: peer.id, viewers: [] });
@@ -44,9 +51,7 @@ export default defineWebSocketHandler({
       if (room) {
         room.viewers.push(peer.id);
         await saveRoom(msg.roomId, room);
-        // Notify viewer they joined
         peer.send(JSON.stringify({ event: 'joined', roomId: msg.roomId }));
-        // Notify broadcaster
         const broadcasterPeer = activePeers.get(room.broadcaster);
         if (broadcasterPeer) {
           broadcasterPeer.send(JSON.stringify({ event: 'viewer-joined', viewerId: peer.id }));
@@ -90,6 +95,7 @@ export default defineWebSocketHandler({
   async close(peer, event) {
     console.log("[ws] close", peer.id, event);
     activePeers.delete(peer.id);
+    await client.hdel('peers', peer.id);
     
     const roomKeys = await getAllRoomIds();
     for (const key of roomKeys) {
