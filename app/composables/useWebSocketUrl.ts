@@ -8,6 +8,14 @@ export const useWebSocketUrl = () => {
     return `${protocol}//${host}/ws/signaling`
   }
   
-  // Server-side: default to localhost for development
-  return 'ws://localhost:3000/ws/signaling'
+  // Server-side: This shouldn't be used since WebSocket connections are client-only
+  // But we provide a sensible default for SSR hydration
+  const config = useRuntimeConfig()
+  const isDev = process.dev
+  
+  if (isDev) {
+    return 'ws://localhost:3000/ws/signaling'
+  }
+  
+  return 'wss://helium.srizan.dev/ws/signaling'
 }
