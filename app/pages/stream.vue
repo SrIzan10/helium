@@ -6,8 +6,9 @@ import { useStreamerStore } from '~/state/streamer';
 const streamerStore = useStreamerStore()
 const videofeedRef = ref<HTMLVideoElement|null>(null);
 const localStream = ref<MediaStream|null>(null);
+const wsUrl = useWebSocketUrl()
 
-const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
+const { send } = useWebSocket(wsUrl, {
   autoReconnect: true,
   heartbeat: {
     message: JSON.stringify({ event: 'ping' }),

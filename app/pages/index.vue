@@ -6,7 +6,8 @@ import { toast } from 'vue-sonner';
 
 const viewerStore = useViewerStore()
 const { code: codeRef } = storeToRefs(viewerStore)
-const { send } = useWebSocket('ws://localhost:3000/ws/signaling', {
+const wsUrl = useWebSocketUrl()
+const { send } = useWebSocket(wsUrl, {
   autoReconnect: true,
   heartbeat: {
     message: JSON.stringify({ event: 'ping' }),
