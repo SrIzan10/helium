@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 
-export default defineCronHandler('everySecond', async () => {
+export default defineCronHandler(() => '*/5 * * * * *', async () => {
   const client = new Redis(process.env.REDIS_URL!);
 
   const activePeers = await client.hgetall('peers');
