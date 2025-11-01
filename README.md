@@ -1,6 +1,24 @@
-# Nuxt Minimal Starter
+# Helium
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Effortless screensharing powered by WebRTC.
+
+## Prerequisites
+
+### TURN Server Setup
+
+To enable connections through restrictive NATs, you need a TURN server. We use [Metered's Open Relay](https://www.metered.ca/tools/openrelay/) which provides 50GB/month free.
+
+1. Sign up for a free account at https://dashboard.metered.ca/signup
+2. Create a new app (you'll get an app name like `yourapp.metered.live`)
+3. Copy your API key from the dashboard
+
+4. Fill in your credentials in `.env`:
+
+```bash
+METERED_APP_NAME=yourapp
+METERED_API_KEY=your_api_key_here
+REDIS_URL=redis://localhost:6379
+```
 
 ## Setup
 
