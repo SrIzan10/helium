@@ -15,6 +15,7 @@ const viewerStore = useViewerStore()
     <PinInput
       id="pin-input"
       @complete="(viewerStore.code = $event.join(''))"
+      type="number"
     >
       <PinInputGroup>
         <PinInputSlot
