@@ -23,20 +23,12 @@ const { send } = useWebSocket(wsUrl, {
     }
     
     if (message.event === 'viewer-joined') {
-      let iceServers: RTCIceServer[] = [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-      ];
-      
-      try {
-        const turnCredentials = await $fetch('/api/turn/credentials');
-        iceServers = turnCredentials as RTCIceServer[];
-      } catch (error) {
-        console.warn('Failed to fetch TURN credentials, using STUN only:', error);
-      }
-
       const peerConnection = new RTCPeerConnection({
-        iceServers,
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: "turn:0.peerjs.com:3478", username: "peerjs", credential: "peerjsp" },
+        ],
         iceCandidatePoolSize: 10
       });
       streamerStore.addPeerConnection(message.viewerId, peerConnection)
