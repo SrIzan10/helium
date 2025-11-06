@@ -2,9 +2,9 @@
 import { useWebSocket } from '@vueuse/core';
 import { useViewerStore } from '~/state/viewer';
 import { Button } from "@/components/ui/button"
-import { toast } from 'vue-sonner';
 import { useWebSocketUrl } from '~/composables/useWebSocketUrl';
 
+const isConnected = ref(false);
 const viewerStore = useViewerStore()
 const { code: codeRef } = storeToRefs(viewerStore)
 const wsUrl = useWebSocketUrl()
@@ -16,10 +16,8 @@ const { send } = useWebSocket(wsUrl, {
   },
   onMessage: async (ws, ev) => {
     const message = JSON.parse(ev.data)
-    if (message.event === 'joined') {
-      toast.success('stream joined successfully')
-    }
     if (message.event === 'offer') {
+      viewerStore.setConnectionStatus('creating rtc peer connections...')
       const peerConnection = new RTCPeerConnection({
         iceServers: [
           { urls: 'stun:stun.l.google.com:19302' },
@@ -55,14 +53,15 @@ const { send } = useWebSocket(wsUrl, {
       viewerStore.setPeerConnection(peerConnection);
       
       peerConnection.ontrack = (event) => {
+        viewerStore.setConnectionStatus('got some tracks!')
         if (event.streams && event.streams[0] && videofeedRef.value) {
           videofeedRef.value.srcObject = event.streams[0];
         }
       };
 
       peerConnection.onicecandidate = (event) => {
-        console.log('onicecandidate', event.candidate);
         if (event.candidate) {
+          viewerStore.setConnectionStatus(`got an ice candidate (type: ${event.candidate.type})`)
           send(JSON.stringify({
             event: 'ice-candidate',
             targetId: message.senderId,
@@ -70,9 +69,27 @@ const { send } = useWebSocket(wsUrl, {
           }))
         }
       };
+
+      peerConnection.onconnectionstatechange = () => {
+        viewerStore.setConnectionStatus(`connection state: ${peerConnection.connectionState}`);
+        
+        if (peerConnection.connectionState === 'connected') {
+          viewerStore.setConnectionStatus('connected!');
+        }
+      };
+
+      peerConnection.oniceconnectionstatechange = () => {
+        viewerStore.setConnectionStatus(`ice connection state: ${peerConnection.iceConnectionState}`);
+      };
+
+      peerConnection.onicegatheringstatechange = () => {
+        viewerStore.setConnectionStatus(`ice gathering state: ${peerConnection.iceGatheringState}`);
+      };
       
+      viewerStore.setConnectionStatus('sending an sdp description')
       await peerConnection.setRemoteDescription(new RTCSessionDescription(message.sdp));
 
+      viewerStore.setConnectionStatus('sending an answer')
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
       
@@ -85,6 +102,7 @@ const { send } = useWebSocket(wsUrl, {
     
     if (message.event === 'ice-candidate') {
       if (viewerStore.peerConnection && viewerStore.peerConnection.remoteDescription) {
+        viewerStore.setConnectionStatus(`got an ice candidate from remote peer (type: ${message.candidate.type})`)
         await viewerStore.peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
       }
     }
@@ -114,7 +132,19 @@ watch(codeRef, (newCode) => {
   <p>effortless screensharing powered by webrtc</p>
   <app-code-input />
 
-  <video ref="videofeedRef" autoplay playsinline controls style="width: 100%; max-width: 1200px; background: black;"></video>
+  <div class="video relative w-full max-w-1/2 aspect-video">
+    <div v-if="!isConnected" class="absolute inset-0 bg-black flex items-center justify-center z-10">
+      {{ viewerStore.connectionStatus }}
+    </div>
+    <video 
+      ref="videofeedRef" 
+      autoplay 
+      playsinline 
+      controls 
+      class="bg-black w-full h-full"
+      @loadeddata="isConnected = true"
+    />
+  </div>
 
   <NuxtLink to="/stream"><Button>host instead?</Button></NuxtLink>
   </div>

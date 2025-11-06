@@ -4,6 +4,7 @@ export const useViewerStore = defineStore('viewer', {
   state: () => ({
     code: '',
     peerConnection: null as RTCPeerConnection | null,
+    connectionStatus: 'waiting for a code',
   }),
   actions: {
     setCode(code: string) {
@@ -12,5 +13,11 @@ export const useViewerStore = defineStore('viewer', {
     setPeerConnection(pc: RTCPeerConnection) {
       this.peerConnection = pc;
     },
+    setConnectionStatus(status: string) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('pinia connection status debug:', status);
+      }
+      this.connectionStatus = status;
+    }
   },
 });
