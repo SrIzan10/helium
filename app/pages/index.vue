@@ -50,6 +50,7 @@ const { send } = useWebSocket(wsUrl, {
             credential: 'password',
           },
         ],
+        iceTransportPolicy: 'relay',
       });
       viewerStore.setPeerConnection(peerConnection);
       

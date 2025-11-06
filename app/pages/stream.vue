@@ -53,6 +53,7 @@ const { send } = useWebSocket(wsUrl, {
             credential: 'password',
           },
         ],
+        iceTransportPolicy: 'relay',
       });
       streamerStore.addPeerConnection(message.viewerId, peerConnection)
 
