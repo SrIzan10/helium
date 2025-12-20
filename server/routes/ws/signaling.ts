@@ -1,37 +1,95 @@
-import Redis from "ioredis";
+import { db } from '~/lib/db';
+import { eq, and } from 'drizzle-orm';
+import * as schema from '~/lib/db/schema';
 
 // thanks nitropack smh
 type Peer = Parameters<NonNullable<Parameters<typeof defineWebSocketHandler>[0]['message']>>[0];
 
-const client = new Redis(process.env.REDIS_URL!);
-const activePeers = new Map<string, Peer>();
-
-async function getRoom(roomId: string) {
-  const data = await client.get(`room:${roomId}`);
-  return data ? JSON.parse(data) : null;
+async function addPeer(peerId: string) {
+  await db.insert(schema.peers).values({ id: peerId }).onConflictDoUpdate({
+    target: schema.peers.id,
+    set: { lastSeen: new Date() },
+  });
 }
 
-async function saveRoom(roomId: string, data: { broadcaster: string, viewers: string[] }) {
-  await client.set(`room:${roomId}`, JSON.stringify(data));
+async function removePeer(peerId: string) {
+  await db.delete(schema.peers).where(eq(schema.peers.id, peerId));
+}
+
+async function updatePeerLastSeen(peerId: string) {
+  await db
+    .update(schema.peers)
+    .set({ lastSeen: new Date() })
+    .where(eq(schema.peers.id, peerId));
+}
+
+async function createRoom(roomId: string, broadcasterId: string) {
+  await db.insert(schema.rooms).values({
+    id: roomId,
+    broadcaster: broadcasterId,
+  });
+}
+
+async function getRoom(roomId: string) {
+  const room = await db.query.rooms.findFirst({
+    where: eq(schema.rooms.id, roomId),
+    with: {
+      viewers: {
+        columns: { viewerId: true },
+      },
+    },
+  });
+
+  if (!room) return null;
+
+  return {
+    id: room.id,
+    broadcaster: room.broadcaster,
+    // typescript is a classic
+    viewers: ((room.viewers ?? []) as { viewerId: string }[]).map(v => v.viewerId),
+  };
 }
 
 async function deleteRoom(roomId: string) {
-  await client.del(`room:${roomId}`);
+  await db.delete(schema.rooms).where(eq(schema.rooms.id, roomId));
+}
+
+async function addViewerToRoom(roomId: string, viewerId: string) {
+  await db.insert(schema.roomViewers).values({
+    roomId,
+    viewerId,
+  });
+}
+
+async function removeViewerFromRoom(roomId: string, viewerId: string) {
+  await db
+    .delete(schema.roomViewers)
+    .where(
+      and(
+        eq(schema.roomViewers.roomId, roomId),
+        eq(schema.roomViewers.viewerId, viewerId)
+      )
+    );
 }
 
 async function getAllRoomIds() {
-  return await client.keys('room:*');
+  const rooms = await db.query.rooms.findMany({
+    columns: { id: true },
+  });
+  return rooms.map(r => r.id);
 }
+
+const activePeers = new Map<string, Peer>();
 
 export default defineWebSocketHandler({
   async open(peer) {
     activePeers.set(peer.id, peer);
-    await client.hset('peers', peer.id, Date.now().toString());
+    await addPeer(peer.id);
     console.log('[ws] peer connected', peer.id);
   },
 
   async message(peer, message) {
-    await client.hset('peers', peer.id, Date.now().toString());
+    await updatePeerLastSeen(peer.id);
     
     // TODO: proper typing
     const msg = message.json() as any;
@@ -43,14 +101,13 @@ export default defineWebSocketHandler({
     }
     if (msg.event === 'create-room') {
       const roomId = generateRoomId();
-      await saveRoom(roomId, { broadcaster: peer.id, viewers: [] });
+      await createRoom(roomId, peer.id);
       peer.send(JSON.stringify({ event: 'room-created', roomId }));
     }
     if (msg.event === 'join-room') {
       const room = await getRoom(msg.roomId);
       if (room) {
-        room.viewers.push(peer.id);
-        await saveRoom(msg.roomId, room);
+        await addViewerToRoom(msg.roomId, peer.id);
         peer.send(JSON.stringify({ event: 'joined', roomId: msg.roomId }));
         const broadcasterPeer = activePeers.get(room.broadcaster);
         if (broadcasterPeer) {
@@ -95,11 +152,10 @@ export default defineWebSocketHandler({
   async close(peer, event) {
     console.log("[ws] close", peer.id, event);
     activePeers.delete(peer.id);
-    await client.hdel('peers', peer.id);
+    await removePeer(peer.id);
     
-    const roomKeys = await getAllRoomIds();
-    for (const key of roomKeys) {
-      const roomId = key.replace('room:', '');
+    const roomIds = await getAllRoomIds();
+    for (const roomId of roomIds) {
       const room = await getRoom(roomId);
       
       if (!room) continue;
@@ -116,8 +172,7 @@ export default defineWebSocketHandler({
       } else {
         const viewerIndex = room.viewers.indexOf(peer.id);
         if (viewerIndex !== -1) {
-          room.viewers.splice(viewerIndex, 1);
-          await saveRoom(roomId, room);
+          await removeViewerFromRoom(roomId, peer.id);
           const broadcasterPeer = activePeers.get(room.broadcaster);
           if (broadcasterPeer) {
             broadcasterPeer.send(JSON.stringify({ event: 'viewer-left', viewerId: peer.id }));

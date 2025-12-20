@@ -133,7 +133,7 @@ watch(codeRef, (newCode) => {
   <app-code-input />
 
   <div class="video relative w-full max-w-1/2 aspect-video">
-    <div v-if="!isConnected" class="absolute inset-0 bg-black flex items-center justify-center z-10">
+    <div v-if="!isConnected" class="absolute inset-0 bg-black flex items-center justify-center z-10 text-white">
       {{ viewerStore.connectionStatus }}
     </div>
     <video 

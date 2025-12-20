@@ -1,43 +1,29 @@
 import { defineCronHandler } from '#nuxt/cron'
-import Redis from 'ioredis';
+import { db } from '../../app/lib/db';
+import { lt, eq } from 'drizzle-orm';
+import * as schema from '../../app/lib/db/schema';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 export default defineCronHandler(() => '*/5 * * * * *', async () => {
-  const client = new Redis(process.env.REDIS_URL!);
+  const thirtySecondsAgo = new Date(Date.now() - 30000);
 
-  const activePeers = await client.hgetall('peers');
-  const now = Date.now();
-  const inactivePeerIds: string[] = [];
+  // Find inactive peers (not seen in last 30 seconds)
+  const inactivePeers = await db.query.peers.findMany({
+    where: lt(schema.peers.lastSeen, thirtySecondsAgo),
+    columns: { id: true },
+  });
 
-  // ident inactive peers
-  for (const [peerId, timestamp] of Object.entries(activePeers)) {
-    if (now - parseInt(timestamp) > 30000) {
-      inactivePeerIds.push(peerId);
-    }
-  }
-
-  if (inactivePeerIds.length === 0) {
-    await client.quit();
+  if (inactivePeers.length === 0) {
     return;
   }
 
+  const inactivePeerIds = inactivePeers.map((p: { id: string }) => p.id);
   IS_DEV && console.log('[cron] cleaning up inactive peers:', inactivePeerIds);
 
-  // delete rooms where broadcaster inactive
-  const roomKeys = await client.keys('room:*');
-  for (const key of roomKeys) {
-    const roomData = await client.get(key);
-    if (!roomData) continue;
-    
-    const room = JSON.parse(roomData);
-    if (inactivePeerIds.includes(room.broadcaster)) {
-      await client.del(key);
-      IS_DEV && console.log(`[cron] deleted room ${key}`);
-    }
+  // Delete inactive peers (cascade will automatically delete their rooms and viewer entries)
+  for (const peerId of inactivePeerIds) {
+    await db.delete(schema.peers).where(eq(schema.peers.id, peerId));
+    IS_DEV && console.log(`[cron] deleted peer ${peerId}`);
   }
-
-  // remove inactive peers
-  await client.hdel('peers', ...inactivePeerIds);
-  await client.quit();
 })
