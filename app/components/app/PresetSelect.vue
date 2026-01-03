@@ -3,15 +3,23 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
 import { Plus } from 'lucide-vue-next';
 const router = useRouter()
+const selectedValue = ref('')
+
+watch(selectedValue, (newValue) => {
+  if (newValue === 'create-new') {
+    router.push('/presets/new')
+  }
+})
 </script>
 
 <template>
-  <Select>
+  <Select v-model="selectedValue">
     <SelectTrigger class="w-[180px]">
       <SelectValue placeholder="Select a preset" />
     </SelectTrigger>
@@ -19,7 +27,8 @@ const router = useRouter()
       <SelectItem value="default">
         Default
       </SelectItem>
-      <SelectItem value="create-new" @click="router.push('/presets/new')">
+      <SelectSeparator />
+      <SelectItem value="create-new">
         <div class="font-bold flex gap-2 items-center">
           <Plus class="size-4" />
           Create New Preset
