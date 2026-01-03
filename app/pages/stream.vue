@@ -3,10 +3,11 @@ import { useWebSocket } from '@vueuse/core';
 import { Button } from "@/components/ui/button"
 import { useStreamerStore } from '~/state/streamer';
 import { useWebSocketUrl } from '~/composables/useWebSocketUrl';
+import PresetSelect from '~/components/app/PresetSelect.vue';
 
 const streamerStore = useStreamerStore()
-const videofeedRef = ref<HTMLVideoElement|null>(null);
-const localStream = ref<MediaStream|null>(null);
+const videofeedRef = ref<HTMLVideoElement | null>(null);
+const localStream = ref<MediaStream | null>(null);
 const wsUrl = useWebSocketUrl()
 
 const { send } = useWebSocket(wsUrl, {
@@ -17,11 +18,11 @@ const { send } = useWebSocket(wsUrl, {
   },
   onMessage: async (ws, ev) => {
     const message = JSON.parse(ev.data)
-    
+
     if (message.event === 'room-created') {
       streamerStore.setCode(message.roomId)
     }
-    
+
     if (message.event === 'viewer-joined') {
       const peerConnection = new RTCPeerConnection({
         iceServers: [
@@ -57,14 +58,12 @@ const { send } = useWebSocket(wsUrl, {
       });
       streamerStore.addPeerConnection(message.viewerId, peerConnection)
 
-      // Add media tracks to peer connection
       if (localStream.value) {
         localStream.value.getTracks().forEach(track => {
           peerConnection.addTrack(track, localStream.value!);
         });
       }
 
-      // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
           send(JSON.stringify({
@@ -77,21 +76,21 @@ const { send } = useWebSocket(wsUrl, {
 
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      
+
       send(JSON.stringify({
         event: 'offer',
         targetId: message.viewerId,
         sdp: offer,
       }))
     }
-    
+
     if (message.event === 'ice-candidate') {
       const pc = streamerStore.peerConnections[message.from];
       if (pc) {
         await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
       }
     }
-    
+
     if (message.event === 'answer') {
       const pc = streamerStore.peerConnections[message.from];
       if (pc) {
@@ -121,9 +120,12 @@ async function startScreenShare() {
 
 <template>
   <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
-    <Button @click="startScreenShare">
-      screenshare
-    </Button>
+    <div class="flex space-x-4 items-center">
+      <Button @click="startScreenShare">
+        screenshare
+      </Button>
+      <PresetSelect />
+    </div>
     <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
     <video ref="videofeedRef" autoplay playsinline muted></video>
   </div>

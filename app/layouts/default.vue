@@ -5,7 +5,8 @@ import ThemeDropdown from '~/components/ui/ThemeDropdown.vue';
 
 <template>
   <div>
-    <header class="flex justify-end p-4">
+    <header class="flex justify-end p-4 space-x-4">
+      <ThemeDropdown />
       <SignedOut>
         <SignInDialog />
       </SignedOut>
@@ -13,7 +14,6 @@ import ThemeDropdown from '~/components/ui/ThemeDropdown.vue';
         <UserButton />
       </SignedIn>
     </header>
-    <ThemeDropdown />
     <slot />
   </div>
 </template>
