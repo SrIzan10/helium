@@ -11,7 +11,7 @@ export default defineNuxtConfig({
       tailwindcss(),
     ],
   },
-  modules: ['shadcn-nuxt', '@nuxtjs/color-mode', '@pinia/nuxt', 'nuxt-cron', '@clerk/nuxt'],
+  modules: ['shadcn-nuxt', '@nuxtjs/color-mode', '@pinia/nuxt', 'nuxt-cron', '@clerk/nuxt', 'nuxt-monaco-editor'],
   colorMode: {
     classSuffix: ''
   },

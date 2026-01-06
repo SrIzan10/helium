@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
+    "@catppuccin/vscode": "^3.18.1",
     "@clerk/nuxt": "^1.13.10",
     "@clerk/themes": "^2.4.46",
     "@neondatabase/serverless": "^1.0.2",
@@ -24,6 +25,7 @@
     "drizzle-orm": "^0.45.1",
     "lucide-vue-next": "^0.548.0",
     "nuxt": "^4.2.0",
+    "nuxt-monaco-editor": "^1.4.0",
     "pinia": "^3.0.3",
     "reka-ui": "^2.6.0",
     "shadcn-nuxt": "2.3.2",
