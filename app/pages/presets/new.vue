@@ -1,8 +1,12 @@
 <template>
   <div class="h-96 w-full border rounded-md overflow-hidden">
-    <ClientOnly
-      ><MonacoEditor :options="editorOptions" class="h-full w-full" lang="json"
-    /></ClientOnly>
+    <ClientOnly>
+      <MonacoEditor
+        :options="editorOptions"
+        class="h-full w-full"
+        lang="json"
+      />
+    </ClientOnly>
   </div>
 </template>
 
