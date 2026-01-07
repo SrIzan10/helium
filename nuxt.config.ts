@@ -1,39 +1,44 @@
 import tailwindcss from "@tailwindcss/vite";
 import { shadcn } from "@clerk/themes";
-
+import monacoEditorPlugin from "vite-plugin-monaco-editor";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  css: ['~/assets/css/tailwind.css'],
+  css: ["~/assets/css/tailwind.css"],
   vite: {
-    plugins: [
-      tailwindcss(),
-    ],
+    plugins: [tailwindcss()],
   },
-  modules: ['shadcn-nuxt', '@nuxtjs/color-mode', '@pinia/nuxt', 'nuxt-cron', '@clerk/nuxt', 'nuxt-monaco-editor'],
+  modules: [
+    "shadcn-nuxt",
+    "@nuxtjs/color-mode",
+    "@pinia/nuxt",
+    "nuxt-cron",
+    "@clerk/nuxt",
+    "nuxt-monaco-editor",
+  ],
   colorMode: {
-    classSuffix: ''
+    classSuffix: "",
   },
   shadcn: {
     /**
      * Prefix for all the imported component
      */
-    prefix: '',
+    prefix: "",
     /**
      * Directory that the component lives in.
      * @default "./components/ui"
      */
-    componentDir: './components/ui'
+    componentDir: "./components/ui",
   },
   nitro: {
     experimental: {
-      websocket: true
-    }
+      websocket: true,
+    },
   },
   clerk: {
     appearance: {
-      theme: shadcn
-    }
-  }
-})
+      theme: shadcn,
+    },
+  },
+});

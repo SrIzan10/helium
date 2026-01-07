@@ -12,7 +12,6 @@
     "db:migrate": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
-    "@catppuccin/vscode": "^3.18.1",
     "@clerk/nuxt": "^1.13.10",
     "@clerk/themes": "^2.4.46",
     "@neondatabase/serverless": "^1.0.2",
@@ -24,7 +23,8 @@
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "lucide-vue-next": "^0.548.0",
-    "nuxt": "^4.2.0",
+    "monaco-editor": "^0.55.1",
+    "nuxt": "^4.2.1",
     "nuxt-monaco-editor": "^1.4.0",
     "pinia": "^3.0.3",
     "reka-ui": "^2.6.0",
@@ -46,5 +46,12 @@
     "nuxt-cron": "^1.8.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@vue/devtools-applet": "^8.0.3",
+      "@vue/devtools-core": "^8.0.3",
+      "@vue/devtools-kit": "^8.0.3"
+    }
   }
 }
