@@ -1,7 +1,7 @@
 <template>
   <div class="h-96 w-full border rounded-md overflow-hidden">
     <ClientOnly
-      ><MonacoEditor :options="editorOptions" class="h-full w-full"
+      ><MonacoEditor :options="editorOptions" class="h-full w-full" lang="json"
     /></ClientOnly>
   </div>
 </template>
@@ -12,8 +12,8 @@ const editorOptions = {
   automaticLayout: true,
   fontFamily: "'JetBrains Mono', monospace",
   fontSize: 14,
-  language: "json",
   minimap: { enabled: false },
+  theme: "catppuccin-mocha",
 };
 
 if (import.meta.client) {
