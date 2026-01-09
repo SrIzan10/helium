@@ -1,23 +1,57 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
-export const peers = pgTable('peers', {
-  id: text('id').primaryKey(),
-  lastSeen: timestamp('last_seen').notNull().defaultNow(),
+export const peers = pgTable("peers", {
+  id: text("id").primaryKey(),
+  lastSeen: timestamp("last_seen").notNull().defaultNow(),
 });
 
-export const rooms = pgTable('rooms', {
-  id: text('id').primaryKey(),
-  broadcaster: text('broadcaster').notNull().references(() => peers.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
-
-export const roomViewers = pgTable('room_viewers', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  roomId: text('room_id')
+export const rooms = pgTable("rooms", {
+  id: text("id").primaryKey(),
+  broadcaster: text("broadcaster")
     .notNull()
-    .references(() => rooms.id, { onDelete: 'cascade' }),
-  viewerId: text('viewer_id')
-    .notNull()
-    .references(() => peers.id, { onDelete: 'cascade' }),
-  joinedAt: timestamp('joined_at').notNull().defaultNow(),
+    .references(() => peers.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+export const roomViewers = pgTable("room_viewers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  roomId: text("room_id")
+    .notNull()
+    .references(() => rooms.id, { onDelete: "cascade" }),
+  viewerId: text("viewer_id")
+    .notNull()
+    .references(() => peers.id, { onDelete: "cascade" }),
+  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+});
+
+export const presets = pgTable("presets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  createdBy: text("created_by").notNull(),
+  name: text("name").notNull(),
+  iceServers: text("ice_servers").notNull(), // stringified json obv
+  shareable: boolean("shareable").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const presetUsers = pgTable(
+  "preset_users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    presetId: uuid("preset_id")
+      .notNull()
+      .references(() => presets.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    addedAt: timestamp("added_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    uniquePresetUser: uniqueIndex().on(table.presetId, table.userId),
+  }),
+);

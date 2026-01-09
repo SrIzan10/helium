@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import SignInDialog from '~/components/app/SignInDialog.vue';
-import ThemeDropdown from '~/components/ui/ThemeDropdown.vue';
+import SignInDialog from "~/components/app/SignInDialog.vue";
+import ThemeDropdown from "~/components/ui/ThemeDropdown.vue";
+import "vue-sonner/style.css";
+import { Toaster } from "@/components/ui/sonner";
 </script>
 
 <template>
@@ -17,5 +19,6 @@ import ThemeDropdown from '~/components/ui/ThemeDropdown.vue';
       </ClientOnly>
     </header>
     <slot />
+    <Toaster />
   </div>
 </template>
