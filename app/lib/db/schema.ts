@@ -6,6 +6,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const peers = pgTable("peers", {
   id: text("id").primaryKey(),
@@ -34,7 +35,7 @@ export const roomViewers = pgTable("room_viewers", {
 export const presets = pgTable("presets", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdBy: text("created_by").notNull(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   iceServers: text("ice_servers").notNull(), // stringified json obv
   shareable: boolean("shareable").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -55,3 +56,15 @@ export const presetUsers = pgTable(
     uniquePresetUser: uniqueIndex().on(table.presetId, table.userId),
   }),
 );
+
+// relations
+export const presetsRelations = relations(presets, ({ many }) => ({
+  presetUsers: many(presetUsers),
+}));
+
+export const presetUsersRelations = relations(presetUsers, ({ one }) => ({
+  preset: one(presets, {
+    fields: [presetUsers.presetId],
+    references: [presets.id],
+  }),
+}));

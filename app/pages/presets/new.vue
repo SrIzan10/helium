@@ -34,16 +34,14 @@
           <div
             class="h-96 w-full border rounded-md overflow-hidden focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition"
           >
-            <ClientOnly>
-              <MonacoEditor
-                :model-value="field.state.value"
-                :options="editorOptions"
-                class="h-full w-full"
-                lang="json"
-                @update:model-value="field.handleChange"
-                @blur="field.handleBlur"
-              />
-            </ClientOnly>
+            <MonacoEditor
+              :model-value="field.state.value"
+              :options="editorOptions"
+              class="h-full w-full"
+              lang="json"
+              @update:model-value="field.handleChange"
+              @blur="field.handleBlur"
+            />
           </div>
           <FieldError
             v-if="isInvalid(field)"
@@ -51,10 +49,28 @@
           />
         </Field>
       </form.Field>
+      <form.Field v-slot="{ field }" name="default">
+        <Field orientation="horizontal">
+          <FieldContent>
+            <FieldLabel for="form-default-preset">
+              Set as default preset
+            </FieldLabel>
+            <FieldDescription>
+              This preset will be selected by default on the preset selector.
+            </FieldDescription>
+          </FieldContent>
+          <Switch
+            id="form-default-preset"
+            :model-value="field.state.value"
+            @update:model-value="field.handleChange"
+            @blur="field.handleBlur"
+          />
+        </Field>
+      </form.Field>
       <Field orientation="horizontal">
         <!--<Button type="button" variant="outline" @click="form.reset()">
-          Reset
-        </Button>-->
+           Reset
+         </Button>-->
         <Button type="submit" form="form-tanstack-input">Save</Button>
       </Field>
     </form>
@@ -62,19 +78,22 @@
 </template>
 
 <script setup lang="ts">
-import mocha from "~/lib/catppuccin-mocha.json";
 import { useForm } from "@tanstack/vue-form";
 import { toast } from "vue-sonner";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
+import { Switch } from "~/components/ui/switch";
+import { schema } from "~/lib/schema/new-preset";
+
+const router = useRouter();
 
 const editorOptions = {
   automaticLayout: true,
@@ -88,124 +107,21 @@ if (import.meta.client) {
   const monaco = await useMonaco();
 
   if (monaco) {
+    const mocha = await $fetch("/catppuccin-mocha.json");
     monaco.editor.defineTheme("catppuccin-mocha", mocha);
     monaco.editor.setTheme("catppuccin-mocha");
   }
 }
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Name must be at least 3 characters.")
-    .max(20, "Name must be at most 20 characters."),
-  iceServers: z.string().superRefine((val, ctx) => {
-    // below code is ai generated. i am not writing validation myself istg
-    try {
-      const parsed = JSON.parse(val);
-      if (!Array.isArray(parsed)) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Must be a JSON array",
-        });
-        return;
-      }
-
-      // Validate each ICE server object
-      parsed.forEach((item, index) => {
-        if (typeof item !== "object" || item === null) {
-          ctx.addIssue({
-            code: "custom",
-            message: `Item ${index}: must be an object`,
-          });
-          return;
-        }
-
-        // Validate urls field - can be string or array of strings
-        const { urls } = item;
-        if (!urls) {
-          ctx.addIssue({
-            code: "custom",
-            message: `Item ${index}: 'urls' is required`,
-          });
-          return;
-        }
-
-        const urlsList = Array.isArray(urls) ? urls : [urls];
-
-        if (!Array.isArray(urls) && typeof urls !== "string") {
-          ctx.addIssue({
-            code: "custom",
-            message: `Item ${index}: 'urls' must be a string or array of strings`,
-          });
-          return;
-        }
-
-        // Validate each URL in the urls list
-        urlsList.forEach((url, urlIndex) => {
-          if (typeof url !== "string") {
-            ctx.addIssue({
-              code: "custom",
-              message: `Item ${index}: urls[${urlIndex}] must be a string`,
-            });
-            return;
-          }
-
-          // Validate STUN/TURN URL format (RFC 8829)
-          const isValidStunUrl = /^stuns?:.+/.test(url);
-          const isValidTurnUrl = /^turns?:.+/.test(url);
-
-          if (!isValidStunUrl && !isValidTurnUrl) {
-            ctx.addIssue({
-              code: "custom",
-              message: `Item ${index}: urls[${urlIndex}] must be a valid STUN (stun:) or TURN (turn:/turns:) URL`,
-            });
-          }
-        });
-
-        // Validate optional fields
-        if (item.username !== undefined && typeof item.username !== "string") {
-          ctx.addIssue({
-            code: "custom",
-            message: `Item ${index}: 'username' must be a string`,
-          });
-        }
-
-        if (
-          item.credential !== undefined &&
-          typeof item.credential !== "string"
-        ) {
-          ctx.addIssue({
-            code: "custom",
-            message: `Item ${index}: 'credential' must be a string`,
-          });
-        }
-
-        if (
-          item.credentialType !== undefined &&
-          !["password", "oauth"].includes(item.credentialType)
-        ) {
-          ctx.addIssue({
-            code: "custom",
-            message: `Item ${index}: 'credentialType' must be 'password' or 'oauth'`,
-          });
-        }
-      });
-    } catch (error) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Must be valid JSON",
-      });
-    }
-  }),
-});
 const form = useForm({
   defaultValues: {
     name: "",
     iceServers:
       '[\n\t{ "urls": "stun:stun.l.google.com:19302" }\,\n\t{ "urls": "stun:stun1.l.google.com:19302" }\n]',
+    default: false,
   },
   validators: {
-    onSubmit: formSchema,
+    onSubmit: schema,
   },
   onSubmit: async ({ value }) => {
     // Parse the JSON string back to an object for submission
@@ -223,6 +139,16 @@ const form = useForm({
         h("code", JSON.stringify(parsedValue, null, 2)),
       ),
     });
+    const request = await $fetch("/api/presets/create", {
+      method: "POST",
+      body: JSON.stringify(parsedValue),
+    });
+    if (request.success) {
+      toast.success("Preset created successfully!");
+      router.push("/presets");
+    } else {
+      toast.error("Failed to create preset.");
+    }
   },
 });
 function isInvalid(field: any) {
