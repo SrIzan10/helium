@@ -1,16 +1,10 @@
 <template>
   <div class="flex flex-col">
-    <form
-      :id="formId"
-      @submit.prevent="form.handleSubmit"
-      class="space-y-6"
-    >
+    <form :id="formId" @submit.prevent="form.handleSubmit" class="space-y-6">
       <FieldGroup>
         <form.Field v-slot="{ field }" name="name">
           <Field :data-invalid="isInvalid(field)">
-            <FieldLabel :for="`${formId}-name`">
-              Preset name
-            </FieldLabel>
+            <FieldLabel :for="`${formId}-name`"> Preset name </FieldLabel>
             <Input
               :id="`${formId}-name`"
               :name="field.name"
@@ -101,10 +95,12 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'success'): void
+  (e: "success"): void;
 }>();
 
-const formId = computed(() => props.isEdit ? `form-edit-preset-${props.presetId}` : 'form-new-preset');
+const formId = computed(() =>
+  props.isEdit ? `form-edit-preset-${props.presetId}` : "form-new-preset",
+);
 
 const editorOptions = {
   automaticLayout: true,
@@ -140,25 +136,32 @@ const form = useForm({
       ...value,
       iceServers: JSON.parse(value.iceServers),
     };
-    
+
     let url = "/api/presets/create";
     let method = "POST";
-    
+
     if (props.isEdit && props.presetId) {
       url = `/api/presets/${props.presetId}`;
       method = "PUT";
     }
 
-    const request = await $fetch(url, {
-      method: method as any,
-      body: JSON.stringify(parsedValue),
-    });
-    
-    if (request.success) {
-      toast.success(props.isEdit ? "Preset updated successfully!" : "Preset created successfully!");
-      emit('success');
-    } else {
-      toast.error(props.isEdit ? "Failed to update preset." : "Failed to create preset.");
+    try {
+      const request = await $fetch<{ success: boolean; message: string }>(url, {
+        method: method as any,
+        body: JSON.stringify(parsedValue),
+      });
+      if (request.success) {
+        toast.success(
+          props.isEdit
+            ? "Preset updated successfully!"
+            : "Preset created successfully!",
+        );
+        emit("success");
+      }
+    } catch (e) {
+      toast.error(
+        props.isEdit ? "Failed to update preset." : "Failed to create preset.",
+      );
     }
   },
 });

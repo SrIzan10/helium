@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4">
     <div v-for="presetUser in data!.data" :key="presetUser.preset.id">
       <Card class="flex flex-col h-full">
         <CardHeader>
@@ -124,9 +124,22 @@ async function deletePreset(id: string) {
   }
 }
 
-function handleShare(preset: any) {
-  // To be implemented by user
-  console.log("Share preset:", preset.id);
+async function handleShare(preset: any) {
+  if (!confirm("Do you want to share this preset?")) return;
+  try {
+    const response = await $fetch(`/api/presets/${preset.id}/share`, {
+      method: "POST",
+    });
+    if (!response.success || !response.shareId) {
+      toast.error("Failed to generate shareable link");
+      return;
+    }
+    const shareableLink = `${window.location.origin}/presets/shared/${response.shareId}`;
+    navigator.clipboard.writeText(shareableLink);
+    toast.success("Link copied to clipboard");
+  } catch (error) {
+    toast.error("Failed to share preset");
+  }
 }
 
 // below types are ai generated

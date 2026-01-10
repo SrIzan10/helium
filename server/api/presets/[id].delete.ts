@@ -1,10 +1,8 @@
-import { eq, and } from "drizzle-orm";
-import { db } from "~/lib/db";
-import { presets, presetUsers } from "~/lib/db/schema";
+import { getPresetById, deletePreset } from "~/lib/utils/presetsDb";
 
 export default defineEventHandler(async (event) => {
   const { isAuthenticated, userId } = event.context.auth();
-  
+
   if (!isAuthenticated || !userId) {
     throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
   }
@@ -15,20 +13,21 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if the user is the creator of the preset
-  const preset = await db.query.presets.findFirst({
-    where: eq(presets.id, id),
-  });
+  const preset = await getPresetById(id);
 
   if (!preset) {
     throw createError({ statusCode: 404, statusMessage: "Preset not found" });
   }
 
   if (preset.createdBy !== userId) {
-    throw createError({ statusCode: 403, statusMessage: "Forbidden: You can only delete your own presets" });
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Forbidden: You can only delete your own presets",
+    });
   }
 
   // Delete the preset (cascades to presetUsers)
-  await db.delete(presets).where(eq(presets.id, id));
+  await deletePreset(id);
 
   return { success: true };
 });
