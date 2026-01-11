@@ -45,38 +45,7 @@ const { send } = useWebSocket(wsUrl, {
     const message = JSON.parse(ev.data);
     if (message.event === "offer") {
       viewerStore.setConnectionStatus("creating rtc peer connections...");
-      const peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          {
-            urls: "turn:5.161.207.54:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:5.161.49.183:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:135.181.147.65:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:5.78.83.26:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:5.223.48.157:3478",
-            username: "username",
-            credential: "password",
-          },
-        ],
-        iceTransportPolicy: "relay",
-      });
+      const peerConnection = new RTCPeerConnection();
       viewerStore.setPeerConnection(peerConnection);
 
       peerConnection.ontrack = (event) => {
@@ -175,4 +144,3 @@ watch(codeRef, (newCode) => {
   }
 });
 </script>
-

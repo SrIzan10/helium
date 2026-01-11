@@ -13,7 +13,7 @@ interface Preset {
   shareable: boolean;
   createdAt: string;
 }
-interface PresetUser {
+export interface PresetUser {
   id: string;
   presetId: string;
   userId: string;

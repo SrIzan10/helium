@@ -36,35 +36,7 @@ const { send } = useWebSocket(wsUrl, {
 
     if (message.event === "viewer-joined") {
       const peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
-          { urls: "stun:stun1.l.google.com:19302" },
-          {
-            urls: "turn:5.161.207.54:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:5.161.49.183:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:135.181.147.65:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:5.78.83.26:3478",
-            username: "username",
-            credential: "password",
-          },
-          {
-            urls: "turn:5.223.48.157:3478",
-            username: "username",
-            credential: "password",
-          },
-        ],
+        iceServers: streamerStore.iceServers,
         iceTransportPolicy: "relay",
       });
       streamerStore.addPeerConnection(message.viewerId, peerConnection);
