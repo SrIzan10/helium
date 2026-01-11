@@ -67,7 +67,6 @@
 </template>
 
 <script setup lang="ts">
-import { useUser } from "@clerk/vue";
 import { toast } from "vue-sonner";
 import {
   Card,
@@ -81,6 +80,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EditPresetDialog from "~/components/app/EditPresetDialog.vue";
 import { Edit, Share2, Trash } from "lucide-vue-next";
+import type { ApiResponse } from "~/lib/types/PresetGetResponse";
 
 const { user } = useUser();
 const { data, refresh } = await useFetch<ApiResponse>("/api/presets", {
@@ -130,42 +130,15 @@ async function handleShare(preset: any) {
     const response = await $fetch(`/api/presets/${preset.id}/share`, {
       method: "POST",
     });
-    if (!response.success || !response.shareId) {
+    if (!response.success) {
       toast.error("Failed to generate shareable link");
       return;
     }
-    const shareableLink = `${window.location.origin}/presets/shared/${response.shareId}`;
+    const shareableLink = `${window.location.origin}/presets/shared/${preset.id}`;
     navigator.clipboard.writeText(shareableLink);
     toast.success("Link copied to clipboard");
   } catch (error) {
     toast.error("Failed to share preset");
   }
-}
-
-// below types are ai generated
-interface IceServer {
-  urls: string | string[];
-  username?: string;
-  credential?: string;
-}
-interface Preset {
-  id: string;
-  name: string;
-  createdBy: string;
-  iceServers: string | IceServer[]; // Database returns string, we transform to IceServer[]
-  shareable: boolean;
-  createdAt: string;
-}
-interface PresetUser {
-  id: string;
-  presetId: string;
-  userId: string;
-  isDefault: boolean;
-  addedAt: string;
-  preset: Preset;
-}
-interface ApiResponse {
-  success: boolean;
-  data: PresetUser[];
 }
 </script>

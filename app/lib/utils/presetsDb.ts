@@ -1,6 +1,8 @@
+import { clerkClient } from "@clerk/nuxt/server";
 import { eq, and } from "drizzle-orm";
 import { db } from "~/lib/db/index";
 import * as schema from "~/lib/db/schema";
+import type { H3Event } from "h3";
 
 export async function getUserPresets(clerkUserId: string) {
   return await db.query.presetUsers.findMany({
@@ -123,4 +125,40 @@ export async function updatePresetDefaultStatus(
 
 export async function deletePreset(presetId: string) {
   await db.delete(schema.presets).where(eq(schema.presets.id, presetId));
+}
+
+export async function getOwnedPresets(userId: string) {
+  return await db.query.presets.findMany({
+    where: eq(schema.presets.createdBy, userId),
+  });
+}
+
+export async function ownsPreset(
+  presetId: string,
+  userId: string,
+): Promise<boolean> {
+  const preset = await getPresetById(presetId);
+  if (!preset) return false;
+  return preset.createdBy === userId;
+}
+
+export async function markAsShareable(presetId: string, shareable: boolean) {
+  await db
+    .update(schema.presets)
+    .set({ shareable })
+    .where(eq(schema.presets.id, presetId));
+}
+
+export async function getPresetAuthorData(event: H3Event, presetId: string) {
+  const preset = await getPresetById(presetId);
+  if (!preset) {
+    throw createError({ statusCode: 404, statusMessage: "Preset not found" });
+  }
+  const user = await clerkClient(event).users.getUser(preset.createdBy);
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    profileImageUrl: user.imageUrl,
+    username: user.username,
+  };
 }

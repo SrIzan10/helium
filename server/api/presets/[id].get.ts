@@ -1,4 +1,8 @@
-import { getPresetById, userHasPresetAccess } from "~/lib/utils/presetsDb";
+import {
+  getPresetAuthorData,
+  getPresetById,
+  userHasPresetAccess,
+} from "~/lib/utils/presetsDb";
 
 export default defineEventHandler(async (event) => {
   const { isAuthenticated, userId } = event.context.auth();
@@ -12,21 +16,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Missing preset ID" });
   }
 
-  // Fetch the preset
   const preset = await getPresetById(id);
-
   if (!preset) {
     throw createError({ statusCode: 404, statusMessage: "Preset not found" });
   }
-
-  // Check if user has access
-  const hasAccess = await userHasPresetAccess(id, userId);
-  if (!hasAccess) {
-    throw createError({ statusCode: 403, statusMessage: "Forbidden" });
-  }
+  const author = await getPresetAuthorData(event, id);
 
   return {
     success: true,
     data: preset,
+    author,
   };
 });
