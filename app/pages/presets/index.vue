@@ -1,5 +1,13 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4">
+  <div class="px-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Presets</h1>
+      <Button @click="navigateTo('/presets/new')">
+        <Plus class="mr-2 h-4 w-4" />
+        Create New Preset
+      </Button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <div v-for="presetUser in data!.data" :key="presetUser.preset.id">
       <Card class="flex flex-col h-full">
         <CardHeader>
@@ -55,6 +63,7 @@
         </CardFooter>
       </Card>
     </div>
+    </div>
 
     <EditPresetDialog
       v-if="selectedPresetUser"
@@ -79,7 +88,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EditPresetDialog from "~/components/app/EditPresetDialog.vue";
-import { Edit, Share2, Trash } from "lucide-vue-next";
+import { Edit, Share2, Trash, Plus } from "lucide-vue-next";
 import type { ApiResponse } from "~/lib/types/PresetGetResponse";
 
 const { user } = useUser();

@@ -7,6 +7,9 @@ export default defineNuxtConfig({
   css: ["~/assets/css/tailwind.css"],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ["urods-79-145-156-36.a.free.pinggy.link"],
+    },
   },
   modules: [
     "shadcn-nuxt",
