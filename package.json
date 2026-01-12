@@ -14,7 +14,6 @@
   "dependencies": {
     "@clerk/nuxt": "^1.13.10",
     "@clerk/themes": "^2.4.46",
-    "@neondatabase/serverless": "^1.0.2",
     "@pinia/nuxt": "0.11.2",
     "@tailwindcss/vite": "^4.1.16",
     "@tanstack/vue-form": "^1.27.7",
@@ -27,6 +26,7 @@
     "monaco-editor": "^0.55.1",
     "nuxt": "^4.2.1",
     "nuxt-monaco-editor": "^1.4.0",
+    "pg": "^8.16.3",
     "pinia": "^3.0.3",
     "reka-ui": "^2.6.0",
     "shadcn-nuxt": "2.3.2",
@@ -43,6 +43,7 @@
     "@iconify/vue": "^5.0.0",
     "@nuxtjs/color-mode": "^3.5.2",
     "@types/node": "^24.9.2",
+    "@types/pg": "^8.16.0",
     "drizzle-kit": "^0.31.8",
     "nuxi": "^3.29.3",
     "nuxt-cron": "^1.8.0",

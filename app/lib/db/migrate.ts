@@ -1,5 +1,6 @@
-import { migrate } from "drizzle-orm/neon-http/migrator";
-import { drizzle } from "drizzle-orm/neon-http";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import * as schema from "./schema";
 import { join } from "path";
 import { existsSync } from "fs";
@@ -9,8 +10,13 @@ export async function runMigrations() {
     throw new Error("DATABASE_URL environment variable is not set");
   }
 
+  // Create a temporary pool for migrations
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
   try {
-    const db = drizzle(process.env.DATABASE_URL, { schema });
+    const db = drizzle(pool, { schema });
     
     // Determine the correct migrations folder path
     // In development: ./drizzle from project root
@@ -29,5 +35,8 @@ export async function runMigrations() {
   } catch (error) {
     console.error("[DB] Migration failed:", error);
     throw error;
+  } finally {
+    // Close the pool after migrations
+    await pool.end();
   }
 }
