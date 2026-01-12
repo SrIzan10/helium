@@ -37,7 +37,6 @@ const { send } = useWebSocket(wsUrl, {
     if (message.event === "viewer-joined") {
       const peerConnection = new RTCPeerConnection({
         iceServers: streamerStore.iceServers,
-        iceTransportPolicy: "relay",
       });
       streamerStore.addPeerConnection(message.viewerId, peerConnection);
 
@@ -59,6 +58,12 @@ const { send } = useWebSocket(wsUrl, {
         }
       };
 
+      peerConnection.onconnectionstatechange = () => {
+        console.log(
+          `connection state with ${message.viewerId}: ${peerConnection.connectionState}`,
+        );
+      };
+
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
@@ -67,6 +72,7 @@ const { send } = useWebSocket(wsUrl, {
           event: "offer",
           targetId: message.viewerId,
           sdp: offer,
+          iceServers: streamerStore.iceServers,
         }),
       );
     }

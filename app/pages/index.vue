@@ -45,7 +45,9 @@ const { send } = useWebSocket(wsUrl, {
     const message = JSON.parse(ev.data);
     if (message.event === "offer") {
       viewerStore.setConnectionStatus("creating rtc peer connections...");
-      const peerConnection = new RTCPeerConnection();
+      const peerConnection = new RTCPeerConnection({
+        iceServers: message.iceServers,
+      });
       viewerStore.setPeerConnection(peerConnection);
 
       peerConnection.ontrack = (event) => {

@@ -124,6 +124,7 @@ export default defineWebSocketHandler({
           event: 'offer',
           sdp: msg.sdp,
           senderId: peer.id,
+          iceServers: msg.iceServers,
         }));
       }
     }

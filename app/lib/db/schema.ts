@@ -58,6 +58,33 @@ export const presetUsers = pgTable(
 );
 
 // relations
+export const peersRelations = relations(peers, ({ many }) => ({
+  roomsAsbroadcaster: many(rooms, { relationName: "broadcaster" }),
+  roomViewersAsViewer: many(roomViewers, { relationName: "viewer" }),
+}));
+
+export const roomsRelations = relations(rooms, ({ one, many }) => ({
+  broadcasterPeer: one(peers, {
+    fields: [rooms.broadcaster],
+    references: [peers.id],
+    relationName: "broadcaster",
+  }),
+  viewers: many(roomViewers, { relationName: "room" }),
+}));
+
+export const roomViewersRelations = relations(roomViewers, ({ one }) => ({
+  room: one(rooms, {
+    fields: [roomViewers.roomId],
+    references: [rooms.id],
+    relationName: "room",
+  }),
+  viewer: one(peers, {
+    fields: [roomViewers.viewerId],
+    references: [peers.id],
+    relationName: "viewer",
+  }),
+}));
+
 export const presetsRelations = relations(presets, ({ many }) => ({
   presetUsers: many(presetUsers),
 }));
