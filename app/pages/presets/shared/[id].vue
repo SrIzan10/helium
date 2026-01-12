@@ -22,6 +22,7 @@
             {{
               (response.author?.fullName ||
                 response.author?.username ||
+                response.author?.email ||
                 "?")[0]!.toUpperCase()
             }}
           </div>
@@ -68,7 +69,7 @@
         <div class="mt-8 flex justify-end gap-3">
           <Button variant="outline" @click="navigateTo('/')">Cancel</Button>
           <Button @click="importPreset" :disabled="isImporting">
-            {{ isImporting ? 'Importing...' : 'Import Preset' }}
+            {{ isImporting ? "Importing..." : "Import Preset" }}
           </Button>
         </div>
       </CardContent>

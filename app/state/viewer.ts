@@ -5,6 +5,7 @@ export const useViewerStore = defineStore('viewer', {
     code: '',
     peerConnection: null as RTCPeerConnection | null,
     connectionStatus: 'waiting for a code',
+    isDisconnected: false,
   }),
   actions: {
     setCode(code: string) {
@@ -18,6 +19,12 @@ export const useViewerStore = defineStore('viewer', {
         console.log('pinia connection status debug:', status);
       }
       this.connectionStatus = status;
+      if (status === 'disconnected') {
+        this.isDisconnected = true;
+      }
+    },
+    resetDisconnected() {
+      this.isDisconnected = false;
     }
   },
 });

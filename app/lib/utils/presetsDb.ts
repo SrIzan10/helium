@@ -160,5 +160,6 @@ export async function getPresetAuthorData(event: H3Event, presetId: string) {
     fullName: user.fullName,
     profileImageUrl: user.imageUrl,
     username: user.username,
+    email: user.primaryEmailAddress?.emailAddress || null,
   };
 }

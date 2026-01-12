@@ -18,6 +18,7 @@ export interface PresetAuthor {
   fullName: string | null;
   profileImageUrl: string | null;
   username: string | null;
+  email: string | null;
 }
 
 export interface PresetShareResponse {
