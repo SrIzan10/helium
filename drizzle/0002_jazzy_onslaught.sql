@@ -1,0 +1,1 @@
+ALTER TABLE "presets" ADD CONSTRAINT "presets_name_unique" UNIQUE("name");

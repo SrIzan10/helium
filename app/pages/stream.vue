@@ -1,130 +1,189 @@
+<template>
+  <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
+    <div class="flex space-x-4 items-center">
+      <Button @click="startScreenShare"> screenshare </Button>
+      <PresetSelect />
+    </div>
+    <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
+    <video ref="videofeedRef" autoplay playsinline muted></video>
+  </div>
+</template>
+
 <script setup lang="ts">
-import { useWebSocket } from '@vueuse/core';
-import { Button } from "@/components/ui/button"
-import { useStreamerStore } from '~/state/streamer';
-import { useWebSocketUrl } from '~/composables/useWebSocketUrl';
+import { useWebSocket } from "@vueuse/core";
+import { Button } from "@/components/ui/button";
+import { useStreamerStore } from "~/state/streamer";
+import { useWebSocketUrl } from "~/composables/useWebSocketUrl";
+import PresetSelect from "~/components/app/PresetSelect.vue";
 
-const streamerStore = useStreamerStore()
-const videofeedRef = ref<HTMLVideoElement|null>(null);
-const localStream = ref<MediaStream|null>(null);
-const wsUrl = useWebSocketUrl()
+const streamerStore = useStreamerStore();
+const videofeedRef = ref<HTMLVideoElement | null>(null);
+const localStream = ref<MediaStream | null>(null);
+const wsUrl = useWebSocketUrl();
 
-const { send } = useWebSocket(wsUrl, {
+const { send, close: closeWebSocket } = useWebSocket(wsUrl, {
   autoReconnect: true,
   heartbeat: {
-    message: JSON.stringify({ event: 'ping' }),
+    message: JSON.stringify({ event: "ping" }),
     interval: 15000,
   },
   onMessage: async (ws, ev) => {
-    const message = JSON.parse(ev.data)
-    
-    if (message.event === 'room-created') {
-      streamerStore.setCode(message.roomId)
-    }
-    
-    if (message.event === 'viewer-joined') {
-      const peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          {
-            urls: 'turn:5.161.207.54:3478',
-            username: 'username',
-            credential: 'password',
-          },
-          {
-            urls: 'turn:5.161.49.183:3478',
-            username: 'username',
-            credential: 'password',
-          },
-          {
-            urls: 'turn:135.181.147.65:3478',
-            username: 'username',
-            credential: 'password',
-          },
-          {
-            urls: 'turn:5.78.83.26:3478',
-            username: 'username',
-            credential: 'password',
-          },
-          {
-            urls: 'turn:5.223.48.157:3478',
-            username: 'username',
-            credential: 'password',
-          },
-        ],
-        iceTransportPolicy: 'relay',
-      });
-      streamerStore.addPeerConnection(message.viewerId, peerConnection)
+    const message = JSON.parse(ev.data);
 
-      // Add media tracks to peer connection
+    if (message.event === "room-created") {
+      streamerStore.setCode(message.roomId);
+    }
+
+    if (message.event === "viewer-joined") {
+      const peerConnection = new RTCPeerConnection({
+        iceServers: streamerStore.iceServers,
+      });
+      streamerStore.addPeerConnection(message.viewerId, peerConnection);
+
       if (localStream.value) {
-        localStream.value.getTracks().forEach(track => {
+        localStream.value.getTracks().forEach((track) => {
           peerConnection.addTrack(track, localStream.value!);
         });
       }
 
-      // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          send(JSON.stringify({
-            event: 'ice-candidate',
-            targetId: message.viewerId,
-            candidate: event.candidate,
-          }))
+          send(
+            JSON.stringify({
+              event: "ice-candidate",
+              targetId: message.viewerId,
+              candidate: event.candidate,
+            }),
+          );
         }
+      };
+
+      peerConnection.onconnectionstatechange = () => {
+        console.log(
+          `connection state with ${message.viewerId}: ${peerConnection.connectionState}`,
+        );
       };
 
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      
-      send(JSON.stringify({
-        event: 'offer',
-        targetId: message.viewerId,
-        sdp: offer,
-      }))
+
+      send(
+        JSON.stringify({
+          event: "offer",
+          targetId: message.viewerId,
+          sdp: offer,
+          iceServers: streamerStore.iceServers,
+        }),
+      );
     }
-    
-    if (message.event === 'ice-candidate') {
+
+    if (message.event === "ice-candidate") {
       const pc = streamerStore.peerConnections[message.from];
       if (pc) {
-        await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+        } catch (error) {
+          console.error("Error adding ICE candidate:", error);
+        }
       }
     }
-    
-    if (message.event === 'answer') {
+
+    if (message.event === "answer") {
       const pc = streamerStore.peerConnections[message.from];
       if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
+        } catch (error) {
+          console.error("Error setting remote description:", error);
+        }
+      }
+    }
+
+    if (message.event === "viewer-left") {
+      const pc = streamerStore.peerConnections[message.viewerId];
+      if (pc) {
+        pc.close();
+        streamerStore.removePeerConnection(message.viewerId);
       }
     }
   },
 });
 
 async function startScreenShare() {
-  const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: false,
-  });
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+    });
 
-  localStream.value = stream;
+    localStream.value = stream;
 
-  if (videofeedRef.value) {
-    videofeedRef.value.srcObject = stream;
+    if (videofeedRef.value) {
+      videofeedRef.value.srcObject = stream;
+    }
+
+    // Detect when user stops sharing via browser UI
+    stream.getTracks().forEach((track) => {
+      track.onended = () => {
+        console.log("Screen sharing stopped by user");
+        cleanupStreaming();
+      };
+    });
+
+    send(
+      JSON.stringify({
+        event: "create-room",
+      }),
+    );
+  } catch (error) {
+    console.error("Failed to start screen share:", error);
+    // User cancelled or permission denied
+    cleanupStreaming();
+  }
+}
+
+function cleanupStreaming() {
+  // Stop all media tracks
+  if (localStream.value) {
+    localStream.value.getTracks().forEach((track) => {
+      track.stop();
+    });
+    localStream.value = null;
   }
 
-  send(JSON.stringify({
-    event: 'create-room',
-  }))
-}
-</script>
+  // Close all peer connections
+  Object.values(streamerStore.peerConnections).forEach((pc) => {
+    pc.close();
+  });
 
-<template>
-  <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
-    <Button @click="startScreenShare">
-      screenshare
-    </Button>
-    <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
-    <video ref="videofeedRef" autoplay playsinline muted></video>
-  </div>
-</template>
+  // Clear peer connections from store
+  streamerStore.clearPeerConnections();
+
+  // Clear video element
+  if (videofeedRef.value) {
+    videofeedRef.value.srcObject = null;
+  }
+
+  // Clear room code
+  streamerStore.setCode("");
+}
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  cleanupStreaming();
+  closeWebSocket();
+});
+
+// Cleanup on window/tab close
+onMounted(() => {
+  const handleBeforeUnload = () => {
+    cleanupStreaming();
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  onUnmounted(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  });
+});
+</script>
