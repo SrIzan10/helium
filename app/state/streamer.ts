@@ -13,6 +13,12 @@ export const useStreamerStore = defineStore("streamer", {
     addPeerConnection(id: string, pc: RTCPeerConnection) {
       this.peerConnections[id] = pc;
     },
+    removePeerConnection(id: string) {
+      delete this.peerConnections[id];
+    },
+    clearPeerConnections() {
+      this.peerConnections = {};
+    },
     setIceServers(iceServers: RTCIceServer[]) {
       this.iceServers = iceServers;
     },

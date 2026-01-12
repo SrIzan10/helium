@@ -21,7 +21,7 @@ const videofeedRef = ref<HTMLVideoElement | null>(null);
 const localStream = ref<MediaStream | null>(null);
 const wsUrl = useWebSocketUrl();
 
-const { send } = useWebSocket(wsUrl, {
+const { send, close: closeWebSocket } = useWebSocket(wsUrl, {
   autoReconnect: true,
   heartbeat: {
     message: JSON.stringify({ event: "ping" }),
@@ -80,35 +80,110 @@ const { send } = useWebSocket(wsUrl, {
     if (message.event === "ice-candidate") {
       const pc = streamerStore.peerConnections[message.from];
       if (pc) {
-        await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(message.candidate));
+        } catch (error) {
+          console.error("Error adding ICE candidate:", error);
+        }
       }
     }
 
     if (message.event === "answer") {
       const pc = streamerStore.peerConnections[message.from];
       if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(message.sdp));
+        } catch (error) {
+          console.error("Error setting remote description:", error);
+        }
+      }
+    }
+
+    if (message.event === "viewer-left") {
+      const pc = streamerStore.peerConnections[message.viewerId];
+      if (pc) {
+        pc.close();
+        streamerStore.removePeerConnection(message.viewerId);
       }
     }
   },
 });
 
 async function startScreenShare() {
-  const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: false,
-  });
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+    });
 
-  localStream.value = stream;
+    localStream.value = stream;
 
-  if (videofeedRef.value) {
-    videofeedRef.value.srcObject = stream;
+    if (videofeedRef.value) {
+      videofeedRef.value.srcObject = stream;
+    }
+
+    // Detect when user stops sharing via browser UI
+    stream.getTracks().forEach((track) => {
+      track.onended = () => {
+        console.log("Screen sharing stopped by user");
+        cleanupStreaming();
+      };
+    });
+
+    send(
+      JSON.stringify({
+        event: "create-room",
+      }),
+    );
+  } catch (error) {
+    console.error("Failed to start screen share:", error);
+    // User cancelled or permission denied
+    cleanupStreaming();
+  }
+}
+
+function cleanupStreaming() {
+  // Stop all media tracks
+  if (localStream.value) {
+    localStream.value.getTracks().forEach((track) => {
+      track.stop();
+    });
+    localStream.value = null;
   }
 
-  send(
-    JSON.stringify({
-      event: "create-room",
-    }),
-  );
+  // Close all peer connections
+  Object.values(streamerStore.peerConnections).forEach((pc) => {
+    pc.close();
+  });
+
+  // Clear peer connections from store
+  streamerStore.clearPeerConnections();
+
+  // Clear video element
+  if (videofeedRef.value) {
+    videofeedRef.value.srcObject = null;
+  }
+
+  // Clear room code
+  streamerStore.setCode("");
 }
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  cleanupStreaming();
+  closeWebSocket();
+});
+
+// Cleanup on window/tab close
+onMounted(() => {
+  const handleBeforeUnload = () => {
+    cleanupStreaming();
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  onUnmounted(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  });
+});
 </script>

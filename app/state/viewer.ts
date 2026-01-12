@@ -10,7 +10,7 @@ export const useViewerStore = defineStore('viewer', {
     setCode(code: string) {
       this.code = code;
     },
-    setPeerConnection(pc: RTCPeerConnection) {
+    setPeerConnection(pc: RTCPeerConnection | null) {
       this.peerConnection = pc;
     },
     setConnectionStatus(status: string) {

@@ -35,7 +35,7 @@ const isConnected = ref(false);
 const viewerStore = useViewerStore();
 const { code: codeRef } = storeToRefs(viewerStore);
 const wsUrl = useWebSocketUrl();
-const { send } = useWebSocket(wsUrl, {
+const { send, close: closeWebSocket } = useWebSocket(wsUrl, {
   autoReconnect: true,
   heartbeat: {
     message: JSON.stringify({ event: "ping" }),
@@ -80,6 +80,18 @@ const { send } = useWebSocket(wsUrl, {
         if (peerConnection.connectionState === "connected") {
           viewerStore.setConnectionStatus("connected!");
         }
+
+        // Handle disconnection or failed connection
+        if (
+          peerConnection.connectionState === "disconnected" ||
+          peerConnection.connectionState === "failed" ||
+          peerConnection.connectionState === "closed"
+        ) {
+          viewerStore.setConnectionStatus(
+            `connection ${peerConnection.connectionState}`,
+          );
+          isConnected.value = false;
+        }
       };
 
       peerConnection.oniceconnectionstatechange = () => {
@@ -95,21 +107,32 @@ const { send } = useWebSocket(wsUrl, {
       };
 
       viewerStore.setConnectionStatus("sending an sdp description");
-      await peerConnection.setRemoteDescription(
-        new RTCSessionDescription(message.sdp),
-      );
+      try {
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(message.sdp),
+        );
+      } catch (error) {
+        console.error("Error setting remote description:", error);
+        viewerStore.setConnectionStatus("failed to connect");
+        return;
+      }
 
       viewerStore.setConnectionStatus("sending an answer");
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
+      try {
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
 
-      send(
-        JSON.stringify({
-          event: "answer",
-          targetId: message.senderId,
-          sdp: answer,
-        }),
-      );
+        send(
+          JSON.stringify({
+            event: "answer",
+            targetId: message.senderId,
+            sdp: answer,
+          }),
+        );
+      } catch (error) {
+        console.error("Error creating answer:", error);
+        viewerStore.setConnectionStatus("failed to send answer");
+      }
     }
 
     if (message.event === "ice-candidate") {
@@ -120,10 +143,20 @@ const { send } = useWebSocket(wsUrl, {
         viewerStore.setConnectionStatus(
           `got an ice candidate from remote peer (type: ${message.candidate.type})`,
         );
-        await viewerStore.peerConnection.addIceCandidate(
-          new RTCIceCandidate(message.candidate),
-        );
+        try {
+          await viewerStore.peerConnection.addIceCandidate(
+            new RTCIceCandidate(message.candidate),
+          );
+        } catch (error) {
+          console.error("Error adding ICE candidate:", error);
+        }
       }
+    }
+
+    if (message.event === "room-closed") {
+      viewerStore.setConnectionStatus("room closed by host");
+      cleanupViewing();
+      isConnected.value = false;
     }
   },
 });
@@ -144,5 +177,41 @@ watch(codeRef, (newCode) => {
   if (newCode.length === 6) {
     startWebRTCConnection();
   }
+});
+
+function cleanupViewing() {
+  // Close peer connection
+  if (viewerStore.peerConnection) {
+    viewerStore.peerConnection.close();
+    viewerStore.setPeerConnection(null);
+  }
+
+  // Clear video element
+  if (videofeedRef.value) {
+    videofeedRef.value.srcObject = null;
+  }
+
+  // Reset connection status
+  viewerStore.setConnectionStatus("disconnected");
+  isConnected.value = false;
+}
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  cleanupViewing();
+  closeWebSocket();
+});
+
+// Cleanup on window/tab close
+onMounted(() => {
+  const handleBeforeUnload = () => {
+    cleanupViewing();
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  onUnmounted(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  });
 });
 </script>
