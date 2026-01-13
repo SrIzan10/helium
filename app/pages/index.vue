@@ -63,14 +63,19 @@
         autoplay
         playsinline
         :controls="false"
-        class="w-full h-full object-contain bg-black"
+        class="w-full h-full object-contain bg-black cursor-pointer"
         @loadeddata="isConnected = true"
+        @click="showControls"
+        @touchstart="showControls"
       />
 
       <!-- Connected Controls Overlay -->
       <div
         v-if="isConnected"
-        class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-b from-black/50 to-transparent"
+        class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start transition-opacity bg-gradient-to-b from-black/50 to-transparent"
+        :class="[controlsVisible ? 'opacity-100' : 'opacity-0 hover:opacity-100']"
+        @click="resetControlsTimeout"
+        @touchstart="showControls"
       >
         <Button
           variant="destructive"
@@ -104,6 +109,8 @@ import { useWebSocketUrl } from "~/composables/useWebSocketUrl";
 import { LogOut, Maximize } from "lucide-vue-next";
 
 const isConnected = ref(false);
+const controlsVisible = ref(false);
+let controlsHideTimeout: ReturnType<typeof setTimeout> | null = null;
 const viewerStore = useViewerStore();
 const { code: codeRef } = storeToRefs(viewerStore);
 const wsUrl = useWebSocketUrl();
@@ -256,6 +263,12 @@ watch(codeRef, (newCode) => {
 });
 
 function cleanupViewing() {
+  // Clear controls hide timeout
+  if (controlsHideTimeout) {
+    clearTimeout(controlsHideTimeout);
+  }
+  controlsVisible.value = false;
+
   // Close peer connection
   if (viewerStore.peerConnection) {
     viewerStore.peerConnection.close();
@@ -295,6 +308,21 @@ function toggleFullscreen() {
 function handleReset() {
   viewerStore.resetDisconnected();
   viewerStore.setConnectionStatus("waiting for a code");
+}
+
+function showControls() {
+  controlsVisible.value = true;
+  resetControlsTimeout();
+}
+
+function resetControlsTimeout() {
+  if (controlsHideTimeout) {
+    clearTimeout(controlsHideTimeout);
+  }
+  
+  controlsHideTimeout = setTimeout(() => {
+    controlsVisible.value = false;
+  }, 3000);
 }
 
 // Cleanup on component unmount
