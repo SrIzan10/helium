@@ -66,11 +66,19 @@
           </div>
         </div>
 
-        <div class="mt-8 flex justify-end gap-3">
-          <Button variant="outline" @click="navigateTo('/')">Cancel</Button>
-          <Button @click="importPreset" :disabled="isImporting">
-            {{ isImporting ? "Importing..." : "Import Preset" }}
-          </Button>
+         <div class="mt-8 space-y-4">
+          <div class="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <label class="text-sm font-medium cursor-pointer"
+              >Activate by default</label
+            >
+            <Switch v-model="setAsDefault" />
+          </div>
+          <div class="flex justify-end gap-3">
+            <Button variant="outline" @click="navigateTo('/')">Cancel</Button>
+            <Button @click="importPreset" :disabled="isImporting">
+              {{ isImporting ? "Importing..." : "Import Preset" }}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -102,6 +110,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import type { PresetShareResponse } from "~/lib/types/PresetShareResponse";
 import { toast } from "vue-sonner";
 
@@ -112,6 +121,7 @@ const { data: response, pending } = useFetch<PresetShareResponse>(
 );
 
 const isImporting = ref(false);
+const setAsDefault = ref(false);
 
 const parsedIceServers = computed(() => {
   if (!response.value?.data.iceServers) return [];
@@ -126,6 +136,9 @@ const importPreset = async () => {
       `/api/presets/${route.params.id}/import`,
       {
         method: "POST",
+        body: {
+          setAsDefault: setAsDefault.value,
+        },
       },
     );
 

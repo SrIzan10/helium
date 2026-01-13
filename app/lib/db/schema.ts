@@ -35,11 +35,13 @@ export const roomViewers = pgTable("room_viewers", {
 export const presets = pgTable("presets", {
   id: uuid("id").primaryKey().defaultRandom(),
   createdBy: text("created_by").notNull(),
-  name: text("name").notNull().unique(),
+  name: text("name").notNull(),
   iceServers: text("ice_servers").notNull(), // stringified json obv
   shareable: boolean("shareable").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (table) => ({
+  uniqueUserPresetName: uniqueIndex().on(table.createdBy, table.name),
+}));
 
 export const presetUsers = pgTable(
   "preset_users",

@@ -1,13 +1,20 @@
 <template>
-  <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4 min-h-[80vh]">
-    <div v-if="!isConnected" class="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  <div
+    class="flex flex-col md:flex-row items-center justify-center gap-6 mt-10 px-4 min-h-[80vh]"
+  >
+    <div
+      v-if="!isConnected"
+      class="flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+    >
       <div class="text-center space-y-2">
         <h1 class="text-4xl font-bold tracking-tight">helium</h1>
-        <p class="text-muted-foreground text-lg">effortless screensharing powered by webrtc</p>
+        <p class="text-muted-foreground text-lg">
+          effortless screensharing powered by webrtc
+        </p>
       </div>
-      
+
       <app-code-input />
-      
+
       <NuxtLink to="/stream">
         <Button variant="link" class="text-muted-foreground hover:text-primary">
           host instead?
@@ -15,12 +22,12 @@
       </NuxtLink>
     </div>
 
-    <div 
+    <div
       class="video transition-all duration-500 ease-in-out"
       :class="[
-        isConnected 
-          ? 'fixed inset-0 z-50 w-full h-full bg-black' 
-          : 'relative w-full max-w-3xl aspect-video rounded-xl overflow-hidden border shadow-sm bg-muted/50'
+        isConnected
+          ? 'fixed inset-0 z-50 w-full h-full bg-black'
+          : 'relative w-full max-w-3xl aspect-video rounded-xl overflow-hidden border shadow-sm bg-muted/50',
       ]"
     >
       <!-- Status Overlay -->
@@ -34,9 +41,16 @@
             Enter another code
           </Button>
         </div>
-        <div v-else-if="viewerStore.connectionStatus !== 'waiting for a code'" class="space-y-4">
-          <div class="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p class="text-sm font-medium text-muted-foreground">{{ viewerStore.connectionStatus }}</p>
+        <div
+          v-else-if="viewerStore.connectionStatus !== 'waiting for a code'"
+          class="space-y-4"
+        >
+          <div
+            class="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"
+          />
+          <p class="text-sm font-medium text-muted-foreground">
+            {{ viewerStore.connectionStatus }}
+          </p>
         </div>
         <p v-else class="text-muted-foreground/50 text-sm">
           enter code to join stream
@@ -54,13 +68,13 @@
       />
 
       <!-- Connected Controls Overlay -->
-      <div 
-        v-if="isConnected" 
+      <div
+        v-if="isConnected"
         class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-b from-black/50 to-transparent"
       >
-        <Button 
-          variant="destructive" 
-          size="lg" 
+        <Button
+          variant="destructive"
+          size="lg"
           class="gap-2 shadow-lg"
           @click="cleanupViewing"
         >
@@ -68,9 +82,9 @@
           Disconnect
         </Button>
 
-        <Button 
-          variant="secondary" 
-          size="lg" 
+        <Button
+          variant="secondary"
+          size="lg"
           class="gap-2 shadow-lg"
           @click="toggleFullscreen"
         >
@@ -252,14 +266,14 @@ function cleanupViewing() {
   if (videofeedRef.value) {
     videofeedRef.value.srcObject = null;
   }
-  
+
   // Clear code
-  viewerStore.code = '';
+  viewerStore.code = "";
 
   // Reset connection status
   viewerStore.setConnectionStatus("disconnected");
   isConnected.value = false;
-  
+
   // Exit fullscreen if active
   if (document.fullscreenElement) {
     document.exitFullscreen().catch(() => {});
@@ -268,7 +282,7 @@ function cleanupViewing() {
 
 function toggleFullscreen() {
   if (!videofeedRef.value) return;
-  
+
   if (!document.fullscreenElement) {
     videofeedRef.value.requestFullscreen().catch((err) => {
       console.error(`Error attempting to enable fullscreen: ${err.message}`);
@@ -280,7 +294,7 @@ function toggleFullscreen() {
 
 function handleReset() {
   viewerStore.resetDisconnected();
-  viewerStore.setConnectionStatus('waiting for a code');
+  viewerStore.setConnectionStatus("waiting for a code");
 }
 
 // Cleanup on component unmount
@@ -302,3 +316,4 @@ onMounted(() => {
   });
 });
 </script>
+

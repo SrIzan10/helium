@@ -1,10 +1,11 @@
-import { getPresetById, userHasPresetAccess } from "~/lib/utils/presetsDb";
+import { getPresetById, userHasPresetAccess, setPresetAsDefault } from "~/lib/utils/presetsDb";
 import { db } from "~/lib/db/index";
 import * as schema from "~/lib/db/schema";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
   const { isAuthenticated, userId } = event.context.auth();
+  const body = await readBody<{ setAsDefault?: boolean }>(event);
 
   if (!isAuthenticated || !userId) {
     setResponseStatus(event, 401);
@@ -59,8 +60,13 @@ export default defineEventHandler(async (event) => {
   await db.insert(schema.presetUsers).values({
     presetId: id,
     userId: userId,
-    isDefault: false,
+    isDefault: body.setAsDefault ?? false,
   });
+
+  // If setAsDefault is true and this is the first import, set it as default
+  if (body.setAsDefault) {
+    await setPresetAsDefault(id, userId);
+  }
 
   return {
     success: true,
