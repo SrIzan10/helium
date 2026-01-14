@@ -41,5 +41,6 @@
   "sharePresetConfirm": "¿Desea compartir este ajuste?",
   "failedToGenerateShareableLink": "Error al generar el enlace para compartir",
   "linkCopiedToClipboard": "Enlace copiado al portapapeles",
-  "failedToSharePreset": "Error al compartir el ajuste"
+  "failedToSharePreset": "Error al compartir el ajuste",
+  "menu": "Menú"
 }

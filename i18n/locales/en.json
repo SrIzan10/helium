@@ -41,5 +41,6 @@
   "sharePresetConfirm": "Do you want to share this preset?",
   "failedToGenerateShareableLink": "Failed to generate shareable link",
   "linkCopiedToClipboard": "Link copied to clipboard",
-  "failedToSharePreset": "Failed to share preset"
+  "failedToSharePreset": "Failed to share preset",
+  "menu": "Menu"
 }
