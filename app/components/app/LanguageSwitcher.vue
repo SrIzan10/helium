@@ -6,23 +6,20 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select'
-import { Languages } from 'lucide-vue-next'
+} from "~/components/ui/select";
+import { Languages } from "lucide-vue-next";
 
-const { locale, locales, setLocale } = useI18n()
-const { t } = useI18n()
+const { locale, locales, setLocale } = useI18n();
+const { t } = useI18n();
 
-const switchLocalePath = useSwitchLocalePath()
-
-const availableLocales = computed(() => locales.value)
+const availableLocales = computed(() => locales.value);
 
 const currentLocale = computed({
   get: () => locale.value,
   set: (value) => {
-    const path = switchLocalePath(value)
-    navigateTo(path)
+    setLocale(value);
   },
-})
+});
 </script>
 
 <template>

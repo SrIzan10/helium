@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
+    "@clerk/localizations": "^3.34.0",
     "@clerk/nuxt": "^1.13.10",
     "@clerk/themes": "^2.4.46",
     "@nuxtjs/i18n": "^10.2.1",

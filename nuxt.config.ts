@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { shadcn } from "@clerk/themes";
+import { esES } from "@clerk/localizations";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
@@ -34,7 +35,7 @@ export default defineNuxtConfig({
     ],
     defaultLocale: "en",
     langDir: "locales",
-    strategy: "prefix_except_default",
+    strategy: "no_prefix",
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: "i18n_locale",
@@ -60,9 +61,6 @@ export default defineNuxtConfig({
       websocket: true,
     },
   },
-  clerk: {
-    appearance: {
-      theme: shadcn,
-    },
-  },
+  // moved clerk config to clerk-locale.client.ts
+  clerk: {},
 });
