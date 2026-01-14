@@ -26,7 +26,7 @@ const navLinks = [
 
 <template>
   <div>
-    <header class="flex justify-between items-center p-4 border-b border-border">
+    <header class="flex justify-between items-center p-4">
       <div class="flex items-center space-x-4 md:space-x-6">
         <NuxtLink
           to="/"
@@ -113,7 +113,9 @@ const navLinks = [
                   {{ t(link.label) }}
                 </NuxtLink>
               </template>
-              <div class="flex items-center space-x-4 pt-4 border-t border-border">
+              <div
+                class="flex items-center space-x-4 pt-4 border-t border-border"
+              >
                 <LanguageSwitcher />
                 <ThemeDropdown />
                 <ClientOnly>
