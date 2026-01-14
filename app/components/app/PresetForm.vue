@@ -4,7 +4,7 @@
       <FieldGroup>
         <form.Field v-slot="{ field }" name="name">
           <Field :data-invalid="isInvalid(field)">
-            <FieldLabel :for="`${formId}-name`"> Preset name </FieldLabel>
+            <FieldLabel :for="`${formId}-name`"> {{ t('presetName') }} </FieldLabel>
             <Input
               :id="`${formId}-name`"
               :name="field.name"
@@ -24,7 +24,7 @@
       </FieldGroup>
       <form.Field v-slot="{ field }" name="iceServers">
         <Field :data-invalid="isInvalid(field)">
-          <FieldLabel>Ice Servers (JSON)</FieldLabel>
+          <FieldLabel>{{ t('iceServersJson') }}</FieldLabel>
           <div
             class="h-96 w-full border rounded-md overflow-hidden focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] transition"
           >
@@ -47,10 +47,10 @@
         <Field orientation="horizontal">
           <FieldContent>
             <FieldLabel :for="`${formId}-default`">
-              Set as default preset
+              {{ t('setAsDefaultPreset') }}
             </FieldLabel>
             <FieldDescription>
-              This preset will be selected by default on the preset selector.
+              {{ t('setAsDefaultPresetDescription') }}
             </FieldDescription>
           </FieldContent>
           <Switch
@@ -62,7 +62,7 @@
         </Field>
       </form.Field>
       <Field orientation="horizontal">
-        <Button type="submit" :form="formId">Save</Button>
+        <Button type="submit" :form="formId">{{ t('save') }}</Button>
       </Field>
     </form>
   </div>
@@ -83,6 +83,8 @@ import {
 import { Input } from "~/components/ui/input";
 import { Switch } from "~/components/ui/switch";
 import { schema } from "~/lib/schema/new-preset";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   initialValues?: {
@@ -153,14 +155,14 @@ const form = useForm({
       if (request.success) {
         toast.success(
           props.isEdit
-            ? "Preset updated successfully!"
-            : "Preset created successfully!",
+            ? t('presetUpdatedSuccessfully')
+            : t('presetCreatedSuccessfully'),
         );
         emit("success");
       }
     } catch (e) {
       toast.error(
-        props.isEdit ? "Failed to update preset." : "Failed to create preset.",
+        props.isEdit ? t('failedToUpdatePreset') : t('failedToCreatePreset'),
       );
     }
   },

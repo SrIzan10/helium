@@ -7,9 +7,6 @@ export default defineNuxtConfig({
   css: ["~/assets/css/tailwind.css"],
   vite: {
     plugins: [tailwindcss()],
-    server: {
-      allowedHosts: ["urods-79-145-156-36.a.free.pinggy.link"],
-    },
   },
   modules: [
     "shadcn-nuxt",
@@ -18,7 +15,32 @@ export default defineNuxtConfig({
     "nuxt-cron",
     "@clerk/nuxt",
     "nuxt-monaco-editor",
+    "@nuxtjs/i18n",
   ],
+  i18n: {
+    locales: [
+      {
+        code: "en",
+        language: "en-US",
+        name: "English",
+        file: "en.json",
+      },
+      {
+        code: "es",
+        language: "es-ES",
+        name: "Español",
+        file: "es.json",
+      },
+    ],
+    defaultLocale: "en",
+    langDir: "locales",
+    strategy: "prefix_except_default",
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: "i18n_locale",
+      redirectOn: "root",
+    },
+  },
   colorMode: {
     classSuffix: "",
   },

@@ -14,6 +14,7 @@
   "dependencies": {
     "@clerk/nuxt": "^1.13.10",
     "@clerk/themes": "^2.4.46",
+    "@nuxtjs/i18n": "^10.2.1",
     "@pinia/nuxt": "0.11.2",
     "@tailwindcss/vite": "^4.1.16",
     "@tanstack/vue-form": "^1.27.7",

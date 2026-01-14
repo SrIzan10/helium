@@ -2,9 +2,9 @@
   <Dialog :open="open" @update:open="$emit('update:open', $event)">
     <DialogContent class="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Edit Preset</DialogTitle>
+        <DialogTitle>{{ t('editPreset') }}</DialogTitle>
         <DialogDescription>
-          Make changes to your preset here. Click save when you're done.
+          {{ t('editPresetDescription') }}
         </DialogDescription>
       </DialogHeader>
       <PresetForm
@@ -27,6 +27,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PresetForm from "~/components/app/PresetForm.vue";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   open: boolean;

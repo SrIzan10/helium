@@ -11,6 +11,7 @@ import { Plus } from "lucide-vue-next";
 import type { ApiResponse, PresetUser } from "~/lib/types/PresetGetResponse";
 import { useStreamerStore } from "~/state/streamer";
 
+const { t } = useI18n();
 const router = useRouter();
 const selectedValue = ref("");
 const presets = ref<PresetUser[]>([]);
@@ -70,7 +71,7 @@ watch(selectedValue, (newValue) => {
   <Select v-model="selectedValue" :disabled="loading">
     <SelectTrigger class="w-[180px]">
       <SelectValue
-        :placeholder="loading ? 'Loading presets...' : 'Select a preset'"
+        :placeholder="loading ? t('loadingPresets') : t('selectAPreset')"
       />
     </SelectTrigger>
     <SelectContent>
@@ -78,7 +79,7 @@ watch(selectedValue, (newValue) => {
         v-if="presets.length === 0 && !loading"
         class="px-2 py-1.5 text-sm text-muted-foreground"
       >
-        No presets available
+        {{ t('noPresetsAvailable') }}
       </div>
 
       <div v-else-if="!loading">
@@ -90,7 +91,7 @@ watch(selectedValue, (newValue) => {
             <span
               v-if="preset.isDefault"
               class="ml-2 text-xs text-muted-foreground"
-              >(default)</span
+              >({{ t('default') }})</span
             >
           </SelectItem>
         </div>
@@ -100,7 +101,7 @@ watch(selectedValue, (newValue) => {
       <SelectItem value="create-new">
         <div class="font-bold flex gap-2 items-center">
           <Plus class="size-4" />
-          Create New Preset
+          {{ t('createNewPreset') }}
         </div>
       </SelectItem>
     </SelectContent>

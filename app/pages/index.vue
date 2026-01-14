@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col md:flex-row items-center justify-center gap-6 mt-10 px-4 min-h-[80vh]"
+    class="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-20 mt-10 px-4 min-h-[80vh]"
   >
     <div
       v-if="!isConnected"
@@ -9,7 +9,7 @@
       <div class="text-center space-y-2">
         <h1 class="text-4xl font-bold tracking-tight">helium</h1>
         <p class="text-muted-foreground text-lg">
-          effortless screensharing powered by webrtc
+          {{ $t("effortlessScreensharing") }}
         </p>
       </div>
 
@@ -17,7 +17,7 @@
 
       <NuxtLink to="/stream">
         <Button variant="link" class="text-muted-foreground hover:text-primary">
-          host instead?
+          {{ $t("hostInstead") }}
         </Button>
       </NuxtLink>
     </div>
@@ -36,9 +36,11 @@
         class="absolute inset-0 flex items-center justify-center z-10 p-4 text-center"
       >
         <div v-if="viewerStore.isDisconnected" class="space-y-4">
-          <p class="text-sm font-medium text-muted-foreground">stream ended</p>
+          <p class="text-sm font-medium text-muted-foreground">
+            {{ $t("streamEnded") }}
+          </p>
           <Button @click="handleReset" variant="outline">
-            Enter another code
+            {{ $t("enterAnotherCode") }}
           </Button>
         </div>
         <div
@@ -53,7 +55,7 @@
           </p>
         </div>
         <p v-else class="text-muted-foreground/50 text-sm">
-          enter code to join stream
+          {{ $t("enterCodeToJoinStream") }}
         </p>
       </div>
 
@@ -73,7 +75,9 @@
       <div
         v-if="isConnected"
         class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start transition-opacity bg-gradient-to-b from-black/50 to-transparent"
-        :class="[controlsVisible ? 'opacity-100' : 'opacity-0 hover:opacity-100']"
+        :class="[
+          controlsVisible ? 'opacity-100' : 'opacity-0 hover:opacity-100',
+        ]"
         @click="resetControlsTimeout"
         @touchstart="showControls"
       >
@@ -84,7 +88,7 @@
           @click="cleanupViewing"
         >
           <LogOut class="w-5 h-5" />
-          Disconnect
+          {{ $t("disconnect") }}
         </Button>
 
         <Button
@@ -94,7 +98,7 @@
           @click="toggleFullscreen"
         >
           <Maximize class="w-5 h-5" />
-          Fullscreen
+          {{ $t("fullscreen") }}
         </Button>
       </div>
     </div>
@@ -319,7 +323,7 @@ function resetControlsTimeout() {
   if (controlsHideTimeout) {
     clearTimeout(controlsHideTimeout);
   }
-  
+
   controlsHideTimeout = setTimeout(() => {
     controlsVisible.value = false;
   }, 3000);
@@ -344,4 +348,3 @@ onMounted(() => {
   });
 });
 </script>
-

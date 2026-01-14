@@ -1,10 +1,10 @@
 <template>
   <div class="px-4">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Presets</h1>
+      <h1 class="text-3xl font-bold">{{ t('presets') }}</h1>
       <Button @click="navigateTo('/presets/new')">
         <Plus class="mr-2 h-4 w-4" />
-        Create New Preset
+        {{ t('createNewPreset') }}
       </Button>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -14,19 +14,16 @@
           <CardTitle class="flex items-center justify-between">
             <span>{{ presetUser.preset.name }}</span>
             <Badge v-if="presetUser.isDefault" variant="secondary"
-              >Default</Badge
+              >{{ t('default') }}</Badge
             >
           </CardTitle>
           <CardDescription
-            >Created by {{ presetUser.preset.createdBy }}</CardDescription
+            >{{ t('createdBy') }} {{ presetUser.preset.createdBy }}</CardDescription
           >
         </CardHeader>
         <CardContent class="grow">
           <div class="text-sm text-muted-foreground truncate">
-            {{ presetUser.preset.iceServers.length }} ICE Server{{
-              presetUser.preset.iceServers.length === 1 ? "" : "s"
-            }}
-            configured
+            {{ presetUser.preset.iceServers.length }} {{ presetUser.preset.iceServers.length === 1 ? t('iceServerConfigured') : t('iceServersConfigured') }} {{ t('configured') }}
           </div>
         </CardContent>
         <CardFooter class="flex justify-between gap-2 ml-auto">
@@ -91,6 +88,7 @@ import EditPresetDialog from "~/components/app/EditPresetDialog.vue";
 import { Edit, Share2, Trash, Plus } from "lucide-vue-next";
 import type { ApiResponse } from "~/lib/types/PresetGetResponse";
 
+const { t } = useI18n();
 const { user } = useUser();
 const { data, refresh } = await useFetch<ApiResponse>("/api/presets", {
   cache: "no-cache",
@@ -120,34 +118,34 @@ function editPreset(presetUser: any) {
 }
 
 async function deletePreset(id: string) {
-  if (!confirm("Are you sure you want to delete this preset?")) return;
+  if (!confirm(t('deletePresetConfirm'))) return;
 
   try {
     await $fetch(`/api/presets/${id}`, {
       method: "DELETE",
     });
-    toast.success("Preset deleted successfully");
+    toast.success(t('presetDeletedSuccessfully'));
     refresh();
   } catch (error) {
-    toast.error("Failed to delete preset");
+    toast.error(t('failedToDeletePreset'));
   }
 }
 
 async function handleShare(preset: any) {
-  if (!confirm("Do you want to share this preset?")) return;
+  if (!confirm(t('sharePresetConfirm'))) return;
   try {
     const response = await $fetch(`/api/presets/${preset.id}/share`, {
       method: "POST",
     });
     if (!response.success) {
-      toast.error("Failed to generate shareable link");
+      toast.error(t('failedToGenerateShareableLink'));
       return;
     }
     const shareableLink = `${window.location.origin}/presets/shared/${preset.id}`;
     navigator.clipboard.writeText(shareableLink);
-    toast.success("Link copied to clipboard");
+    toast.success(t('linkCopiedToClipboard'));
   } catch (error) {
-    toast.error("Failed to share preset");
+    toast.error(t('failedToSharePreset'));
   }
 }
 </script>

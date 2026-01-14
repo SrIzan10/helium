@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
     <div class="flex space-x-4 items-center">
-      <Button @click="startScreenShare"> screenshare </Button>
+      <Button @click="startScreenShare"> {{ $t('screenshare') }} </Button>
       <PresetSelect />
     </div>
     <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
