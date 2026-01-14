@@ -24,7 +24,7 @@ const currentLocale = computed({
 
 <template>
   <Select v-model="currentLocale">
-    <SelectTrigger class="w-[160px]">
+    <SelectTrigger class="w-[150px]">
       <Languages class="mr-2 h-4 w-4" />
       <SelectValue :placeholder="t('selectLanguage')" />
     </SelectTrigger>

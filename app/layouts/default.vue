@@ -44,6 +44,13 @@ const { t } = useI18n();
               </NuxtLink>
             </SignedIn>
           </ClientOnly>
+          <NuxtLink
+            to="/about"
+            class="text-sm font-medium hover:text-primary transition-colors"
+            active-class="text-primary"
+          >
+            {{ t("about") }}
+          </NuxtLink>
         </nav>
       </div>
       <div class="flex items-center space-x-4">
