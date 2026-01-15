@@ -42,5 +42,16 @@
   "failedToGenerateShareableLink": "Failed to generate shareable link",
   "linkCopiedToClipboard": "Link copied to clipboard",
   "failedToSharePreset": "Failed to share preset",
-  "menu": "Menu"
+  "menu": "Menu",
+  "wantsToSharePreset": "wants to share a preset with you",
+  "created": "Created",
+  "servers": "Servers",
+  "activateByDefault": "Activate by default",
+  "cancel": "Cancel",
+  "importPreset": "Import Preset",
+  "importing": "Importing...",
+  "presetNotFound": "Preset not found.",
+  "presetCannotBeShared": "This preset cannot be shared",
+  "presetSharingDisabled": "The preset owner has not enabled sharing for this preset.",
+  "goBack": "Go Back"
 }

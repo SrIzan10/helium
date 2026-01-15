@@ -30,7 +30,7 @@
             <span class="text-foreground font-semibold">
               {{ response.author?.fullName || response.author?.username }}
             </span>
-            wants to share a preset with you
+            {{ $t("wantsToSharePreset") }}
           </CardDescription>
         </div>
         <CardTitle class="text-2xl pt-2">{{ response.data.name }}</CardTitle>
@@ -41,7 +41,7 @@
             <p
               class="text-xs font-medium text-muted-foreground uppercase tracking-wider"
             >
-              Created
+              {{ $t("created") }}
             </p>
             <p class="text-sm font-medium">
               {{
@@ -56,46 +56,57 @@
             <p
               class="text-xs font-medium text-muted-foreground uppercase tracking-wider"
             >
-              Servers
+              {{ $t("servers") }}
             </p>
             <div class="flex items-center gap-2">
               <span class="text-sm font-medium"
-                >{{ parsedIceServers.length }} ICE Servers</span
+                >{{ parsedIceServers.length }}
+                {{
+                  parsedIceServers.length === 1
+                    ? $t("iceServerConfigured")
+                    : $t("iceServersConfigured")
+                }}</span
               >
             </div>
           </div>
         </div>
 
-         <div class="mt-8 space-y-4">
-          <div class="flex items-center justify-between p-3 bg-muted rounded-lg">
-            <label class="text-sm font-medium cursor-pointer"
-              >Activate by default</label
-            >
+        <div class="mt-8 space-y-4">
+          <div
+            class="flex items-center justify-between p-3 bg-muted rounded-lg"
+          >
+            <label class="text-sm font-medium cursor-pointer">{{
+              $t("activateByDefault")
+            }}</label>
             <Switch v-model="setAsDefault" />
           </div>
           <div class="flex justify-end gap-3">
-            <Button variant="outline" @click="navigateTo('/')">Cancel</Button>
+            <Button variant="outline" @click="navigateTo('/')">{{
+              $t("cancel")
+            }}</Button>
             <Button @click="importPreset" :disabled="isImporting">
-              {{ isImporting ? "Importing..." : "Import Preset" }}
+              {{ isImporting ? $t("importing") : $t("importPreset") }}
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
     <div v-else-if="!response" class="text-center text-muted-foreground">
-      <p>Preset not found.</p>
+      <p>{{ $t("presetNotFound") }}</p>
     </div>
     <div
       v-else-if="response && !response.data.shareable"
       class="text-center text-muted-foreground space-y-4"
     >
       <p class="text-lg font-semibold text-destructive">
-        This preset cannot be shared
+        {{ $t("presetCannotBeShared") }}
       </p>
       <p class="text-sm">
-        The preset owner has not enabled sharing for this preset.
+        {{ $t("presetSharingDisabled") }}
       </p>
-      <Button variant="outline" @click="navigateTo('/')">Go Back</Button>
+      <Button variant="outline" @click="navigateTo('/')">{{
+        $t("goBack")
+      }}</Button>
     </div>
   </div>
 </template>
@@ -121,7 +132,7 @@ const { data: response, pending } = useFetch<PresetShareResponse>(
 );
 
 const isImporting = ref(false);
-const setAsDefault = ref(false);
+const setAsDefault = ref(true);
 
 const parsedIceServers = computed(() => {
   if (!response.value?.data.iceServers) return [];

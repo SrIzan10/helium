@@ -42,5 +42,16 @@
   "failedToGenerateShareableLink": "Error al generar el enlace para compartir",
   "linkCopiedToClipboard": "Enlace copiado al portapapeles",
   "failedToSharePreset": "Error al compartir el ajuste",
-  "menu": "Menú"
+  "menu": "Menú",
+  "wantsToSharePreset": "desea compartir un ajuste contigo",
+  "created": "Creado",
+  "servers": "Servidores",
+  "activateByDefault": "Activar de forma predeterminada",
+  "cancel": "Cancelar",
+  "importPreset": "Importar ajuste",
+  "importing": "Importando...",
+  "presetNotFound": "Ajuste no encontrado.",
+  "presetCannotBeShared": "Este ajuste no se puede compartir",
+  "presetSharingDisabled": "El propietario del ajuste no ha habilitado el uso compartido para este ajuste.",
+  "goBack": "Volver"
 }
