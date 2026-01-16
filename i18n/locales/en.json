@@ -14,7 +14,7 @@
   "enterAnotherCode": "Enter another code",
   "disconnect": "Disconnect",
   "fullscreen": "Fullscreen",
-  "screenshare": "screenshare",
+  "screenshare": "Screenshare",
   "loadingPresets": "Loading presets...",
   "selectAPreset": "Select a preset",
   "noPresetsAvailable": "No presets available",
@@ -53,5 +53,6 @@
   "presetNotFound": "Preset not found.",
   "presetCannotBeShared": "This preset cannot be shared",
   "presetSharingDisabled": "The preset owner has not enabled sharing for this preset.",
-  "goBack": "Go Back"
+  "goBack": "Go Back",
+  "changeSource": "Change Source"
 }

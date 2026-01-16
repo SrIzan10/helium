@@ -14,7 +14,7 @@
   "enterAnotherCode": "introduce otro código",
   "disconnect": "Desconectar",
   "fullscreen": "Pantalla completa",
-  "screenshare": "compartir pantalla",
+  "screenshare": "Compartir pantalla",
   "loadingPresets": "Cargando ajustes...",
   "selectAPreset": "Seleccionar un ajuste",
   "noPresetsAvailable": "No hay ajustes disponibles",
@@ -53,5 +53,6 @@
   "presetNotFound": "Ajuste no encontrado.",
   "presetCannotBeShared": "Este ajuste no se puede compartir",
   "presetSharingDisabled": "El propietario del ajuste no ha habilitado el uso compartido para este ajuste.",
-  "goBack": "Volver"
+  "goBack": "Volver",
+  "changeSource": "Cambiar fuente"
 }

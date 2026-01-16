@@ -1,7 +1,16 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
     <div class="flex space-x-4 items-center">
-      <Button @click="startScreenShare"> {{ $t('screenshare') }} </Button>
+      <Button v-if="!localStream" @click="startScreenShare">
+        {{ $t("screenshare") }}
+      </Button>
+      <Button
+        v-if="localStream"
+        @click="changeScreenShareSource"
+        variant="outline"
+      >
+        {{ $t("changeSource") }}
+      </Button>
       <PresetSelect />
     </div>
     <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
@@ -122,7 +131,6 @@ async function startScreenShare() {
       videofeedRef.value.srcObject = stream;
     }
 
-    // Detect when user stops sharing via browser UI
     stream.getTracks().forEach((track) => {
       track.onended = () => {
         console.log("Screen sharing stopped by user");
@@ -137,13 +145,51 @@ async function startScreenShare() {
     );
   } catch (error) {
     console.error("Failed to start screen share:", error);
-    // User cancelled or permission denied
     cleanupStreaming();
   }
 }
 
+async function changeScreenShareSource() {
+  try {
+    const newStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false,
+    });
+
+    if (!localStream.value) return;
+
+    const newVideoTrack = newStream.getVideoTracks()[0];
+
+    newVideoTrack.onended = () => {
+      console.log("Screen sharing stopped by user");
+      cleanupStreaming();
+    };
+
+    Object.values(streamerStore.peerConnections).forEach((pc) => {
+      const senders = pc.getSenders();
+      const videoSender = senders.find(
+        (sender) => sender.track?.kind === "video",
+      );
+      if (videoSender) {
+        videoSender.replaceTrack(newVideoTrack);
+      }
+    });
+
+    localStream.value.getTracks().forEach((track) => {
+      track.stop();
+    });
+
+    localStream.value = newStream;
+
+    if (videofeedRef.value) {
+      videofeedRef.value.srcObject = newStream;
+    }
+  } catch (error) {
+    console.error("Failed to change screen share source:", error);
+  }
+}
+
 function cleanupStreaming() {
-  // Stop all media tracks
   if (localStream.value) {
     localStream.value.getTracks().forEach((track) => {
       track.stop();
@@ -151,30 +197,24 @@ function cleanupStreaming() {
     localStream.value = null;
   }
 
-  // Close all peer connections
   Object.values(streamerStore.peerConnections).forEach((pc) => {
     pc.close();
   });
 
-  // Clear peer connections from store
   streamerStore.clearPeerConnections();
 
-  // Clear video element
   if (videofeedRef.value) {
     videofeedRef.value.srcObject = null;
   }
 
-  // Clear room code
   streamerStore.setCode("");
 }
 
-// Cleanup on component unmount
 onBeforeUnmount(() => {
   cleanupStreaming();
   closeWebSocket();
 });
 
-// Cleanup on window/tab close
 onMounted(() => {
   const handleBeforeUnload = () => {
     cleanupStreaming();
