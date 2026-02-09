@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-6 mt-10 px-4">
-    <div class="flex space-x-4 items-center">
+    <div class="flex flex-wrap gap-4 items-center justify-center">
       <Button v-if="!localStream" @click="startScreenShare">
         {{ $t("screenshare") }}
       </Button>
@@ -13,22 +13,88 @@
       </Button>
       <PresetSelect />
     </div>
-    <p v-if="streamerStore.code" class="font-mono">{{ streamerStore.code }}</p>
-    <video ref="videofeedRef" autoplay playsinline muted></video>
+
+    <div v-if="isElectron && supportsAudioScreenShare" class="flex flex-col items-center gap-2">
+      <div class="flex items-center gap-2">
+        <Switch id="include-audio" v-model:checked="includeAudio" />
+        <Label for="include-audio" class="text-sm">{{ $t("includeAudio") }}</Label>
+      </div>
+      
+      <div v-if="platformInfo?.isLinux && platformInfo?.supportsVenmic && includeAudio" class="flex flex-col items-center gap-2">
+        <Select v-model="selectedAudioSource">
+          <SelectTrigger class="w-[200px]">
+            <SelectValue :placeholder="$t('audioSource')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{{ $t("allSystemAudio") }}</SelectItem>
+            <SelectItem 
+              v-for="source in audioSources" 
+              :key="source['node.name']" 
+              :value="source['application.name']! || source['node.name']!"
+            >
+              {{ source['application.name'] || source['node.name'] }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="ghost" size="sm" @click="refreshAudioSources">
+          {{ $t("refreshSources") }}
+        </Button>
+      </div>
+    </div>
+
+    <div v-if="isElectron" class="text-xs text-muted-foreground">
+      <span v-if="platformInfo?.isWindows">Windows</span>
+      <span v-else-if="platformInfo?.isMac">macOS</span>
+      <span v-else-if="platformInfo?.isLinux">Linux</span>
+      <span v-if="supportsAudioScreenShare" class="ml-2">• {{ $t("audioSupported") }}</span>
+    </div>
+
+    <p v-if="streamerStore.code" class="font-mono text-lg">{{ streamerStore.code }}</p>
+    <video ref="videofeedRef" autoplay playsinline muted class="max-w-full rounded-lg"></video>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useWebSocket } from "@vueuse/core";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStreamerStore } from "~/state/streamer";
 import { useWebSocketUrl } from "~/composables/useWebSocketUrl";
+import { useElectron } from "~/composables/useElectron";
 import PresetSelect from "~/components/app/PresetSelect.vue";
 
 const streamerStore = useStreamerStore();
 const videofeedRef = ref<HTMLVideoElement | null>(null);
 const localStream = ref<MediaStream | null>(null);
 const wsUrl = useWebSocketUrl();
+
+const includeAudio = ref(true);
+const selectedAudioSource = ref("all");
+
+const {
+  isElectron,
+  platformInfo,
+  audioSources,
+  supportsAudioScreenShare,
+  getPlatformInfo,
+  getVenmicSources,
+  linkAllAudio,
+  linkAppAudio,
+  unlinkVenmicAudio,
+} = useElectron();
+
+onMounted(async () => {
+  await getPlatformInfo();
+  if (platformInfo.value?.isLinux && platformInfo.value?.supportsVenmic) {
+    await refreshAudioSources();
+  }
+});
+
+async function refreshAudioSources() {
+  await getVenmicSources();
+}
 
 const { send, close: closeWebSocket } = useWebSocket(wsUrl, {
   autoReconnect: true,
@@ -120,9 +186,25 @@ const { send, close: closeWebSocket } = useWebSocket(wsUrl, {
 
 async function startScreenShare() {
   try {
+    const isLinuxWithVenmic = isElectron.value && platformInfo.value?.isLinux && platformInfo.value?.supportsVenmic;
+    
+    if (isLinuxWithVenmic && includeAudio.value) {
+      if (selectedAudioSource.value === "all") {
+        await linkAllAudio();
+      } else {
+        await linkAppAudio(selectedAudioSource.value);
+      }
+    }
+
+    const shouldRequestAudio = isElectron.value && includeAudio.value && supportsAudioScreenShare.value;
+
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: true,
-      audio: false,
+      audio: shouldRequestAudio ? {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      } : false,
     });
 
     localStream.value = stream;
@@ -138,6 +220,10 @@ async function startScreenShare() {
       };
     });
 
+    const videoTracks = stream.getVideoTracks();
+    const audioTracks = stream.getAudioTracks();
+    console.log(`[Helium] Stream started - Video: ${videoTracks.length}, Audio: ${audioTracks.length}`);
+
     send(
       JSON.stringify({
         event: "create-room",
@@ -151,27 +237,48 @@ async function startScreenShare() {
 
 async function changeScreenShareSource() {
   try {
+    const isLinuxWithVenmic = isElectron.value && platformInfo.value?.isLinux && platformInfo.value?.supportsVenmic;
+    
+    if (isLinuxWithVenmic && includeAudio.value) {
+      if (selectedAudioSource.value === "all") {
+        await linkAllAudio();
+      } else {
+        await linkAppAudio(selectedAudioSource.value);
+      }
+    }
+
+    const shouldRequestAudio = isElectron.value && includeAudio.value && supportsAudioScreenShare.value;
+
     const newStream = await navigator.mediaDevices.getDisplayMedia({
       video: true,
-      audio: false,
+      audio: shouldRequestAudio,
     });
 
     if (!localStream.value) return;
 
     const newVideoTrack = newStream.getVideoTracks()[0];
+    const newAudioTrack = newStream.getAudioTracks()[0];
 
-    newVideoTrack.onended = () => {
+    newVideoTrack!.onended = () => {
       console.log("Screen sharing stopped by user");
       cleanupStreaming();
     };
 
     Object.values(streamerStore.peerConnections).forEach((pc) => {
       const senders = pc.getSenders();
-      const videoSender = senders.find(
-        (sender) => sender.track?.kind === "video",
-      );
+      
+      const videoSender = senders.find((sender) => sender.track?.kind === "video");
       if (videoSender) {
-        videoSender.replaceTrack(newVideoTrack);
+        videoSender.replaceTrack(newVideoTrack!);
+      }
+      
+      if (newAudioTrack) {
+        const audioSender = senders.find((sender) => sender.track?.kind === "audio");
+        if (audioSender) {
+          audioSender.replaceTrack(newAudioTrack);
+        } else {
+          pc.addTrack(newAudioTrack, newStream);
+        }
       }
     });
 
@@ -189,12 +296,16 @@ async function changeScreenShareSource() {
   }
 }
 
-function cleanupStreaming() {
+async function cleanupStreaming() {
   if (localStream.value) {
     localStream.value.getTracks().forEach((track) => {
       track.stop();
     });
     localStream.value = null;
+  }
+
+  if (isElectron.value && platformInfo.value?.isLinux) {
+    await unlinkVenmicAudio();
   }
 
   Object.values(streamerStore.peerConnections).forEach((pc) => {

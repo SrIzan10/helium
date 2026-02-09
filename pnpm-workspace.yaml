@@ -1,0 +1,3 @@
+onlyBuiltDependencies:
+  - '@vencord/venmic'
+  - electron

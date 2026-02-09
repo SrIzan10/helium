@@ -54,5 +54,10 @@
   "presetCannotBeShared": "This preset cannot be shared",
   "presetSharingDisabled": "The preset owner has not enabled sharing for this preset.",
   "goBack": "Go Back",
-  "changeSource": "Change Source"
+  "changeSource": "Change Source",
+  "includeAudio": "Include Audio",
+  "audioSource": "Audio Source",
+  "allSystemAudio": "All System Audio",
+  "refreshSources": "Refresh Sources",
+  "audioSupported": "Audio Supported"
 }

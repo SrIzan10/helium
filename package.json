@@ -2,6 +2,7 @@
   "name": "helium",
   "type": "module",
   "private": true,
+  "main": "./electron/dist/main/index.js",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -9,7 +10,13 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "ui:add": "pnpm dlx shadcn-vue@latest add",
-    "db:migrate": "drizzle-kit generate && drizzle-kit migrate"
+    "db:migrate": "drizzle-kit generate && drizzle-kit migrate",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:dev": "pnpm electron:compile && concurrently \"nuxt dev --host\" \"wait-on http://localhost:3000 && electron . --dev\"",
+    "electron:build": "pnpm electron:compile && nuxt build && electron-builder",
+    "electron:build:win": "pnpm electron:compile && nuxt build && electron-builder --win",
+    "electron:build:mac": "pnpm electron:compile && nuxt build && electron-builder --mac",
+    "electron:build:linux": "pnpm electron:compile && nuxt build && electron-builder --linux"
   },
   "dependencies": {
     "@clerk/localizations": "^3.34.0",
@@ -47,10 +54,48 @@
     "@nuxtjs/color-mode": "^3.5.2",
     "@types/node": "^24.9.2",
     "@types/pg": "^8.16.0",
+    "concurrently": "^9.1.2",
     "drizzle-kit": "^0.31.8",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
     "nuxi": "^3.29.3",
     "nuxt-cron": "^1.8.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wait-on": "^8.0.3"
+  },
+  "optionalDependencies": {
+    "@vencord/venmic": "^6.1.0"
+  },
+  "build": {
+    "appId": "com.helium.app",
+    "productName": "Helium",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/dist/**/*",
+      ".output/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".output",
+        "to": "app"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": ["dmg", "zip"],
+      "hardenedRuntime": true,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.plist"
+    },
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    }
   }
 }

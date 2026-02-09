@@ -6,6 +6,10 @@
 .cache
 dist
 
+# Electron compiled output
+electron/dist
+dist-electron
+
 # Node dependencies
 node_modules
 

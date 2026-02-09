@@ -54,5 +54,10 @@
   "presetCannotBeShared": "Este ajuste no se puede compartir",
   "presetSharingDisabled": "El propietario del ajuste no ha habilitado el uso compartido para este ajuste.",
   "goBack": "Volver",
-  "changeSource": "Cambiar fuente"
+  "changeSource": "Cambiar fuente",
+  "includeAudio": "Incluir audio",
+  "audioSource": "Fuente de audio",
+  "allSystemAudio": "Todo el audio del sistema",
+  "refreshSources": "Actualizar fuentes",
+  "audioSupported": "Audio soportado"
 }
