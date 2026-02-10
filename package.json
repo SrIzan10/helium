@@ -1,5 +1,11 @@
 {
   "name": "helium",
+  "version": "0.1.0",
+  "author": {
+    "email": "helium@srizan.dev",
+    "name": "eth0 software",
+    "url": "https://helium.srizan.dev"    
+  },
   "type": "module",
   "private": true,
   "main": "./electron/dist/main/index.js",
@@ -13,10 +19,10 @@
     "db:migrate": "drizzle-kit generate && drizzle-kit migrate",
     "electron:compile": "tsc -p electron/tsconfig.json",
     "electron:dev": "pnpm electron:compile && concurrently \"nuxt dev --host\" \"wait-on http://localhost:3000 && electron . --dev\"",
-    "electron:build": "pnpm electron:compile && nuxt build && electron-builder",
-    "electron:build:win": "pnpm electron:compile && nuxt build && electron-builder --win",
-    "electron:build:mac": "pnpm electron:compile && nuxt build && electron-builder --mac",
-    "electron:build:linux": "pnpm electron:compile && nuxt build && electron-builder --linux"
+    "electron:build": "pnpm electron:compile && electron-builder",
+    "electron:build:win": "pnpm electron:compile && electron-builder --win",
+    "electron:build:mac": "pnpm electron:compile && electron-builder --mac",
+    "electron:build:linux": "pnpm electron:compile && electron-builder --linux"
   },
   "dependencies": {
     "@clerk/localizations": "^3.34.0",
@@ -74,6 +80,7 @@
       "output": "dist-electron"
     },
     "files": [
+      "electron/package.json",
       "electron/dist/**/*",
       ".output/**/*"
     ],
@@ -94,7 +101,7 @@
       "target": ["nsis", "portable"]
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": ["AppImage"],
       "category": "Utility"
     }
   }

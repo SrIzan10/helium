@@ -75,6 +75,7 @@ function createWindow(): void {
     },
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
     backgroundColor: '#1a1a2e',
+    autoHideMenuBar: true,
   });
 
   setupDisplayMediaHandler();
@@ -83,7 +84,7 @@ function createWindow(): void {
     mainWindow.loadURL(NUXT_DEV_URL);
     mainWindow.webContents.openDevTools();
   } else {
-    const prodUrl = process.env.HELIUM_URL || 'http://localhost:3000';
+    const prodUrl = 'https://helium.srizan.dev';
     mainWindow.loadURL(prodUrl);
   }
 
