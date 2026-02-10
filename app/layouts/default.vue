@@ -2,6 +2,7 @@
 import SignInDialog from "~/components/app/SignInDialog.vue";
 import ThemeDropdown from "~/components/ui/ThemeDropdown.vue";
 import LanguageSwitcher from "~/components/app/LanguageSwitcher.vue";
+import { useElectron } from "~/composables/useElectron";
 import "vue-sonner/style.css";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -16,6 +17,17 @@ import LogoSvg from "~/assets/logo.svg?component";
 
 const { t } = useI18n();
 const mobileMenuOpen = ref(false);
+const { isElectron, platformInfo, getPlatformInfo } = useElectron();
+
+const isMacElectron = computed(() => {
+  return isElectron.value && platformInfo.value?.isMac;
+});
+
+onMounted(async () => {
+  if (isElectron.value && !platformInfo.value) {
+    await getPlatformInfo();
+  }
+});
 
 const navLinks = [
   { to: "/", label: "home" },
@@ -27,8 +39,14 @@ const navLinks = [
 
 <template>
   <div>
-    <header class="flex justify-between items-center p-4">
-      <div class="flex items-center space-x-4 md:space-x-6">
+    <header
+      class="flex justify-between items-center p-4"
+      :class="isMacElectron ? 'pl-24 [-webkit-app-region:drag] select-none' : ''"
+    >
+      <div
+        class="flex items-center space-x-4 md:space-x-6"
+        :class="isMacElectron ? '[-webkit-app-region:no-drag]' : ''"
+      >
         <NuxtLink
           to="/"
           class="inline-flex items-center gap-2 text-lg font-semibold leading-none hover:opacity-80 transition-opacity"
@@ -61,7 +79,10 @@ const navLinks = [
         </nav>
       </div>
 
-      <div class="hidden md:flex items-center space-x-4">
+      <div
+        class="hidden md:flex items-center space-x-4"
+        :class="isMacElectron ? '[-webkit-app-region:no-drag]' : ''"
+      >
         <LanguageSwitcher />
         <ThemeDropdown />
         <ClientOnly>
@@ -74,7 +95,10 @@ const navLinks = [
         </ClientOnly>
       </div>
 
-      <div class="md:hidden">
+      <div
+        class="md:hidden"
+        :class="isMacElectron ? '[-webkit-app-region:no-drag]' : ''"
+      >
         <Sheet v-model:open="mobileMenuOpen">
           <SheetTrigger as-child>
             <button
