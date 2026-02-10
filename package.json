@@ -103,6 +103,12 @@
     "linux": {
       "target": ["AppImage"],
       "category": "Utility"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "SrIzan10",
+      "repo": "helium",
+      "releaseType": "release"
     }
   }
 }
