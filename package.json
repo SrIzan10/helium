@@ -22,7 +22,11 @@
     "electron:build": "pnpm electron:compile && electron-builder",
     "electron:build:win": "pnpm electron:compile && electron-builder --win",
     "electron:build:mac": "pnpm electron:compile && electron-builder --mac",
-    "electron:build:linux": "pnpm electron:compile && electron-builder --linux"
+    "electron:build:linux": "pnpm electron:compile && electron-builder --linux",
+    "electron:publish": "pnpm electron:compile && electron-builder --publish always",
+    "electron:publish:win": "pnpm electron:compile && electron-builder --win --publish always",
+    "electron:publish:mac": "pnpm electron:compile && electron-builder --mac --publish always",
+    "electron:publish:linux": "pnpm electron:compile && electron-builder --linux --publish always"
   },
   "dependencies": {
     "@clerk/localizations": "^3.34.0",
