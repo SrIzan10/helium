@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Menu } from "lucide-vue-next";
+import LogoSvg from "~/assets/logo.svg?component";
 
 const { t } = useI18n();
 const mobileMenuOpen = ref(false);
@@ -30,11 +31,11 @@ const navLinks = [
       <div class="flex items-center space-x-4 md:space-x-6">
         <NuxtLink
           to="/"
-          class="text-xl font-semibold hover:opacity-80 transition-opacity"
+          class="inline-flex items-center gap-2 text-lg font-semibold leading-none hover:opacity-80 transition-opacity"
         >
-          helium
+          <LogoSvg class="block w-8 h-8 shrink-0" />
+          <span class="leading-none">helium</span>
         </NuxtLink>
-        <!-- Desktop Navigation -->
         <nav class="hidden md:flex space-x-4">
           <template v-for="link in navLinks" :key="link.to">
             <ClientOnly v-if="link.requiresAuth">
@@ -60,7 +61,6 @@ const navLinks = [
         </nav>
       </div>
 
-      <!-- Desktop Right Side -->
       <div class="hidden md:flex items-center space-x-4">
         <LanguageSwitcher />
         <ThemeDropdown />
@@ -74,7 +74,6 @@ const navLinks = [
         </ClientOnly>
       </div>
 
-      <!-- Mobile Menu -->
       <div class="md:hidden">
         <Sheet v-model:open="mobileMenuOpen">
           <SheetTrigger as-child>
