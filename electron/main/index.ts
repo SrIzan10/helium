@@ -4,6 +4,7 @@ import {
   ipcMain,
   desktopCapturer,
   session,
+  shell,
   systemPreferences,
   type IpcMainInvokeEvent,
   type DesktopCapturerSource,
@@ -206,6 +207,20 @@ ipcMain.handle('helium:check-screen-permission', () => {
     return systemPreferences.getMediaAccessStatus('screen');
   }
   return 'granted';
+});
+
+ipcMain.handle('helium:open-screen-permission-settings', async () => {
+  if (!isMac) {
+    return false;
+  }
+
+  try {
+    await shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture');
+    return true;
+  } catch (error) {
+    console.error('[Helium] Failed to open macOS screen recording settings:', error);
+    return false;
+  }
 });
 
 const gotTheLock = app.requestSingleInstanceLock();

@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import { useWebSocket } from "@vueuse/core";
+import { toast } from "vue-sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -66,6 +67,7 @@ import { useElectron } from "~/composables/useElectron";
 import PresetSelect from "~/components/app/PresetSelect.vue";
 
 const streamerStore = useStreamerStore();
+const { t } = useI18n();
 const videofeedRef = ref<HTMLVideoElement | null>(null);
 const localStream = ref<MediaStream | null>(null);
 const wsUrl = useWebSocketUrl();
@@ -83,6 +85,8 @@ const {
   linkAllAudio,
   linkAppAudio,
   unlinkVenmicAudio,
+  getScreenPermissionStatus,
+  openScreenPermissionSettings,
 } = useElectron();
 
 onMounted(async () => {
@@ -231,6 +235,7 @@ async function startScreenShare() {
     );
   } catch (error) {
     console.error("Failed to start screen share:", error);
+    await handleScreenShareError(error);
     cleanupStreaming();
   }
 }
@@ -293,7 +298,34 @@ async function changeScreenShareSource() {
     }
   } catch (error) {
     console.error("Failed to change screen share source:", error);
+    await handleScreenShareError(error);
   }
+}
+
+async function handleScreenShareError(error: unknown): Promise<void> {
+  const isPermissionDeniedError =
+    error instanceof DOMException && error.name === "NotAllowedError";
+
+  if (!isPermissionDeniedError || !isElectron.value || !platformInfo.value?.isMac) {
+    toast.error(t("failedToStartScreenShare"));
+    return;
+  }
+
+  const permissionStatus = await getScreenPermissionStatus();
+
+  if (permissionStatus === "granted") {
+    toast.error(t("failedToStartScreenShare"));
+    return;
+  }
+
+  const openedSettings = await openScreenPermissionSettings();
+
+  if (openedSettings) {
+    toast.error(t("screenRecordingPermissionRequired"));
+    return;
+  }
+
+  toast.error(t("screenRecordingPermissionRequiredNoShortcut"));
 }
 
 async function cleanupStreaming() {

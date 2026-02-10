@@ -36,6 +36,7 @@ interface HeliumElectronAPI {
   venmicLink: (options: VenmicLinkOptions) => Promise<boolean>;
   venmicUnlink: () => Promise<boolean>;
   checkScreenPermission: () => Promise<string>;
+  openScreenPermissionSettings: () => Promise<boolean>;
 }
 
 declare global {
@@ -212,6 +213,28 @@ export function useElectron() {
     return platformInfo.value.supportsLoopbackAudio || platformInfo.value.supportsVenmic;
   });
 
+  const getScreenPermissionStatus = async (): Promise<string> => {
+    if (!checkElectron()) return "granted";
+
+    try {
+      return await window.heliumElectron!.checkScreenPermission();
+    } catch (error) {
+      console.error("[useElectron] Failed to check screen permission:", error);
+      return "unknown";
+    }
+  };
+
+  const openScreenPermissionSettings = async (): Promise<boolean> => {
+    if (!checkElectron()) return false;
+
+    try {
+      return await window.heliumElectron!.openScreenPermissionSettings();
+    } catch (error) {
+      console.error("[useElectron] Failed to open screen permission settings:", error);
+      return false;
+    }
+  };
+
   onMounted(() => {
     checkElectron();
     if (isElectron.value) {
@@ -246,9 +269,10 @@ export function useElectron() {
     linkAllAudio,
     linkAppAudio,
     unlinkVenmicAudio,
+    getScreenPermissionStatus,
+    openScreenPermissionSettings,
 
     startScreenShareWithAudio,
     stopScreenShare,
   };
 }
-

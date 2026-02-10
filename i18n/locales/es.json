@@ -59,5 +59,8 @@
   "audioSource": "Fuente de audio",
   "allSystemAudio": "Todo el audio del sistema",
   "refreshSources": "Actualizar fuentes",
-  "audioSupported": "Audio soportado"
+  "audioSupported": "Audio soportado",
+  "failedToStartScreenShare": "No se pudo iniciar el uso compartido de pantalla.",
+  "screenRecordingPermissionRequired": "macOS bloqueó la captura de pantalla. Permite Helium en Configuración del Sistema > Privacidad y seguridad > Grabación de pantalla y luego reinicia Helium.",
+  "screenRecordingPermissionRequiredNoShortcut": "macOS bloqueó la captura de pantalla. Abre Configuración del Sistema > Privacidad y seguridad > Grabación de pantalla, permite Helium y luego reinicia Helium."
 }

@@ -59,5 +59,8 @@
   "audioSource": "Audio Source",
   "allSystemAudio": "All System Audio",
   "refreshSources": "Refresh Sources",
-  "audioSupported": "Audio Supported"
+  "audioSupported": "Audio Supported",
+  "failedToStartScreenShare": "Failed to start screen share.",
+  "screenRecordingPermissionRequired": "macOS blocked screen capture. Allow Helium in System Settings > Privacy & Security > Screen Recording, then restart Helium.",
+  "screenRecordingPermissionRequiredNoShortcut": "macOS blocked screen capture. Open System Settings > Privacy & Security > Screen Recording, allow Helium, then restart Helium."
 }

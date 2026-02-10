@@ -57,6 +57,8 @@ const heliumElectronAPI = {
   venmicUnlink: (): Promise<boolean> => ipcRenderer.invoke('helium:venmic-unlink'),
 
   checkScreenPermission: (): Promise<string> => ipcRenderer.invoke('helium:check-screen-permission'),
+  openScreenPermissionSettings: (): Promise<boolean> =>
+    ipcRenderer.invoke('helium:open-screen-permission-settings'),
 };
 
 contextBridge.exposeInMainWorld('heliumElectron', heliumElectronAPI);
