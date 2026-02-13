@@ -7,10 +7,13 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "android": {
-      "package": "dev.srizan.helium.native"
+      "package": "dev.srizan.helium.viewer"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "ios": {
+      "bundleIdentifier": "dev.srizan.helium.viewer"
+    }
   }
 }
