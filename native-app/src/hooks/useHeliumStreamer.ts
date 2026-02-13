@@ -239,6 +239,13 @@ export function useHeliumStreamer(
 
     const videoTrackCount = stream.getVideoTracks().length;
     const audioTrackCount = stream.getAudioTracks().length;
+
+    if (!videoTrackCount) {
+      setStatus("screen capture started without video track");
+      stopSharing();
+      return;
+    }
+
     setStatus(`capturing ${videoTrackCount} video / ${audioTrackCount} audio tracks`);
 
     stream.getTracks().forEach((track) => {

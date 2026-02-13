@@ -151,7 +151,13 @@ export function StreamerScreen() {
 
         <View style={styles.preview}>
           {isSharing && streamUrl ? (
-            <RTCView mirror={false} objectFit="contain" streamURL={streamUrl} style={styles.video} />
+            <RTCView
+              mirror={false}
+              objectFit="cover"
+              streamURL={streamUrl}
+              style={styles.video}
+              zOrder={0}
+            />
           ) : (
             <Text style={styles.previewPlaceholder}>Screen preview appears after sharing starts</Text>
           )}
