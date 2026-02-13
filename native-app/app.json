@@ -17,6 +17,7 @@
     },
     "plugins": [
       "expo-secure-store",
+      "./plugins/withWebRTCMediaProjection",
       [
         "expo-splash-screen",
         {
