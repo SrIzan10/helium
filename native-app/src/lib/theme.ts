@@ -14,41 +14,62 @@ export interface AppTheme {
   secondaryForeground: string;
   accent: string;
   destructive: string;
+  destructiveForeground: string;
 }
 
 const lightTheme: AppTheme = {
-  background: "#f0eff5",
-  foreground: "#4f4c64",
-  card: "#eceaf2",
-  border: "#e1dee9",
-  input: "#dfdce8",
-  muted: "#e7e5ee",
-  mutedForeground: "#66637d",
-  primary: "#a43ad7",
-  primaryForeground: "#ffffff",
-  secondary: "#be9bcd",
-  secondaryForeground: "#3f3452",
-  accent: "#d0cee0",
-  destructive: "#b4435a",
+  background: "#FAFAFA", // slightly off-white
+  foreground: "#09090b", // zinc-950
+  card: "#FFFFFF",
+  border: "#E4E4E7", // zinc-200
+  input: "#E4E4E7",
+  muted: "#F4F4F5", // zinc-100
+  mutedForeground: "#71717A", // zinc-500
+  primary: "#c026d3", // fuchsia-600
+  primaryForeground: "#FFFFFF",
+  secondary: "#F4F4F5", // zinc-100
+  secondaryForeground: "#18181B", // zinc-900
+  accent: "#F4F4F5",
+  destructive: "#EF4444", // red-500
+  destructiveForeground: "#FFFFFF",
 };
 
 const darkTheme: AppTheme = {
-  background: "#30273b",
-  foreground: "#e4deec",
-  card: "#2a2234",
-  border: "#494055",
-  input: "#534a5f",
-  muted: "#3b3347",
-  mutedForeground: "#bbb3c7",
-  primary: "#d28ee8",
-  primaryForeground: "#48245f",
-  secondary: "#6d4a82",
-  secondaryForeground: "#eadcf1",
-  accent: "#5a5268",
-  destructive: "#d46f7a",
+  background: "#18181b", // zinc-950 (or slight purple tint per brand: #1a1625)
+  foreground: "#FAFAFA", // zinc-50
+  card: "#18181b", // Matches background often in shadcn default, or slightly lighter
+  border: "#27272A", // zinc-800
+  input: "#27272A",
+  muted: "#27272A",
+  mutedForeground: "#A1A1AA", // zinc-400
+  primary: "#d946ef", // fuchsia-500
+  primaryForeground: "#1a1625",
+  secondary: "#27272A",
+  secondaryForeground: "#FAFAFA",
+  accent: "#27272A",
+  destructive: "#7F1D1D", // red-900
+  destructiveForeground: "#FFFFFF",
+};
+
+// Override with specific brand colors from oklch analysis if needed
+const brandLightTheme = {
+  ...lightTheme,
+  background: "#fdfbff", // slightly purple white
+  primary: "#c026d3",
+  secondary: "#f5f3ff", // light violet
+};
+
+const brandDarkTheme = {
+  ...darkTheme,
+  background: "#1e1b2e", // Deep purple/slate
+  card: "#1e1b2e",
+  border: "#2e2a45",
+  input: "#2e2a45",
+  muted: "#2e2a45",
+  primary: "#e879f9", // bright fuchsia
 };
 
 export function useAppTheme(): AppTheme {
   const colorScheme = useColorScheme();
-  return colorScheme === "dark" ? darkTheme : lightTheme;
+  return colorScheme === "dark" ? brandDarkTheme : brandLightTheme;
 }

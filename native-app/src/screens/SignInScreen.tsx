@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useSignIn } from "@clerk/clerk-expo";
 import {
-  ActivityIndicator,
-  Pressable,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
 import { useAppTheme } from "../lib/theme";
 import { useI18n } from "../i18n/I18nProvider";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/Card";
 
 export function SignInScreen() {
   const theme = useAppTheme();
@@ -48,42 +50,52 @@ export function SignInScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t("appTitle")}</Text>
-      <Text style={styles.subtitle}>{t("signInSubtitle")}</Text>
-
-      <TextInput
-        autoCapitalize="none"
-        keyboardType="email-address"
-        onChangeText={setEmail}
-        placeholder={t("email")}
-        placeholderTextColor="#7e8794"
-        style={styles.input}
-        value={email}
-      />
-      <TextInput
-        onChangeText={setPassword}
-        placeholder={t("password")}
-        placeholderTextColor="#7e8794"
-        secureTextEntry
-        style={styles.input}
-        value={password}
-      />
-
-      <Pressable
-        disabled={!isLoaded || !email || !password}
-        onPress={() => {
-          void onSignIn();
-        }}
-        style={styles.button}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardView}
       >
-        {isLoaded ? (
-          <Text style={styles.buttonText}>{t("signIn")}</Text>
-        ) : (
-          <ActivityIndicator color={theme.primaryForeground} />
-        )}
-      </Pressable>
+        <Card style={styles.card}>
+          <CardHeader>
+            <CardTitle style={{ textAlign: "center" }}>{t("appTitle")}</CardTitle>
+            <CardDescription style={{ textAlign: "center" }}>
+              {t("signInSubtitle")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent style={{ gap: 4 }}>
+            <Input
+              autoCapitalize="none"
+              keyboardType="email-address"
+              label={t("email")}
+              onChangeText={setEmail}
+              placeholder="name@example.com"
+              value={email}
+            />
+            <Input
+              label={t("password")}
+              onChangeText={setPassword}
+              placeholder="••••••••"
+              secureTextEntry
+              value={password}
+            />
 
-      <Text style={styles.status}>{status}</Text>
+            <View style={{ height: 16 }} />
+
+            <Button
+              disabled={!isLoaded || !email || !password}
+              label={t("signIn")}
+              loading={!isLoaded}
+              onPress={() => {
+                void onSignIn();
+              }}
+              size="lg"
+            />
+
+            {status ? (
+              <Text style={styles.status}>{status}</Text>
+            ) : null}
+          </CardContent>
+        </Card>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -91,48 +103,33 @@ export function SignInScreen() {
 function createStyles(theme: ReturnType<typeof useAppTheme>) {
   return StyleSheet.create({
     container: {
-      alignItems: "stretch",
-      backgroundColor: theme.background,
       flex: 1,
-      gap: 12,
+      backgroundColor: theme.background,
       justifyContent: "center",
       padding: 24,
     },
-    title: {
-      color: theme.foreground,
-      fontSize: 28,
-      fontWeight: "700",
-      textAlign: "center",
+    keyboardView: {
+      justifyContent: "center",
+      flex: 1,
+      maxWidth: 500,
+      width: "100%",
+      alignSelf: "center",
     },
-    subtitle: {
-      color: theme.mutedForeground,
-      marginBottom: 12,
-      textAlign: "center",
-    },
-    input: {
-      backgroundColor: theme.input,
-      borderColor: theme.border,
-      borderRadius: 12,
-      borderWidth: 1,
-      color: theme.foreground,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-    },
-    button: {
-      alignItems: "center",
-      backgroundColor: theme.primary,
-      borderRadius: 12,
-      paddingVertical: 12,
-    },
-    buttonText: {
-      color: theme.primaryForeground,
-      fontSize: 16,
-      fontWeight: "700",
+    card: {
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 10,
+      elevation: 2,
     },
     status: {
       color: theme.mutedForeground,
       fontSize: 13,
       textAlign: "center",
+      marginTop: 16,
     },
   });
 }

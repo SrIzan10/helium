@@ -15,6 +15,8 @@ import type { MessageKey } from "../i18n/messages";
 import { useAppTheme } from "../lib/theme";
 import { getPresets } from "../lib/presets";
 import type { NativeIceServer, PresetUser } from "../types/presets";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/Card";
 
 export function StreamerScreen() {
   const { getToken, signOut } = useAuth();
@@ -104,60 +106,63 @@ export function StreamerScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>{t("streamerTitle")}</Text>
-        <Text style={styles.subtitle}>{t("streamerSubtitle")}</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t("streamerTitle")}</Text>
+          <Text style={styles.subtitle}>{t("streamerSubtitle")}</Text>
+        </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t("preset")}</Text>
-          <Text style={styles.small}>{t(presetStatusKey, presetStatusParams)}</Text>
-
-          <View style={styles.presetList}>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("preset")}</CardTitle>
+            <CardDescription>{t(presetStatusKey, presetStatusParams)}</CardDescription>
+          </CardHeader>
+          <CardContent style={styles.presetList}>
             {presets.map((preset) => {
               const selected = presetId === preset.presetId;
               return (
-                <Pressable
+                <Button
                   key={preset.presetId}
-                  onPress={() => {
-                    setPresetId(preset.presetId);
-                  }}
-                  style={[styles.presetItem, selected ? styles.presetItemSelected : null]}
+                  onPress={() => setPresetId(preset.presetId)}
+                  variant={selected ? "secondary" : "ghost"}
+                  style={{ justifyContent: "flex-start" }}
                 >
-                  <Text
-                    style={[
-                      styles.presetItemText,
-                      selected ? styles.presetItemTextSelected : null,
-                    ]}
-                  >
-                    {preset.preset.name}
-                    {preset.isDefault ? ` (${t("defaultLabel")})` : ""}
+                  <Text style={{ color: selected ? theme.secondaryForeground : theme.foreground }}>
+                     {preset.preset.name}
+                     {preset.isDefault ? ` (${t("defaultLabel")})` : ""}
                   </Text>
-                </Pressable>
+                </Button>
               );
             })}
-          </View>
-        </View>
+          </CardContent>
+        </Card>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t("session")}</Text>
-          <Text style={styles.small}>{t("status")}: {t(statusKey, statusParams)}</Text>
-          <Text style={styles.small}>{t("viewers")}: {viewerCount}</Text>
-          <Text style={styles.roomCode}>{roomCode || "------"}</Text>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("session")}</CardTitle>
+            <CardDescription>
+              {t("status")}: {t(statusKey, statusParams)} • {t("viewers")}: {viewerCount}
+            </CardDescription>
+          </CardHeader>
+          <CardContent style={{ gap: 12 }}>
+            <View style={styles.roomCodeContainer}>
+              <Text style={styles.roomCode}>{roomCode || "------"}</Text>
+            </View>
 
-          <View style={styles.actions}>
-            <Pressable
-              onPress={() => {
-                void startSharing();
-              }}
-              style={styles.primaryButton}
-            >
-              <Text style={styles.primaryButtonText}>{t("startShare")}</Text>
-            </Pressable>
-
-            <Pressable onPress={stopSharing} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>{t("stop")}</Text>
-            </Pressable>
-          </View>
-        </View>
+            <View style={styles.actions}>
+              <Button
+                onPress={() => void startSharing()}
+                label={t("startShare")}
+                variant="default"
+                style={{ flex: 1 }}
+              />
+              <Button
+                onPress={stopSharing}
+                label={t("stop")}
+                variant="secondary"
+              />
+            </View>
+          </CardContent>
+        </Card>
 
         <View style={styles.preview}>
           {isSharing ? (
@@ -169,14 +174,12 @@ export function StreamerScreen() {
           )}
         </View>
 
-        <Pressable
-          onPress={() => {
-            void signOut();
-          }}
-          style={styles.signOutButton}
-        >
-          <Text style={styles.signOutText}>{t("signOut")}</Text>
-        </Pressable>
+        <Button
+          onPress={() => void signOut()}
+          label={t("signOut")}
+          variant="destructive"
+          style={{ marginTop: 8 }}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -189,116 +192,58 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       flex: 1,
     },
     container: {
-      gap: 12,
+      gap: 16,
       padding: 16,
       paddingBottom: 28,
     },
+    header: {
+      marginBottom: 8,
+    },
     title: {
       color: theme.foreground,
-      fontSize: 24,
-      fontWeight: "700",
+      fontSize: 28,
+      fontWeight: "800",
+      letterSpacing: -0.5,
     },
     subtitle: {
       color: theme.mutedForeground,
-      marginTop: -6,
-    },
-    card: {
-      backgroundColor: theme.card,
-      borderColor: theme.border,
-      borderRadius: 14,
-      borderWidth: 1,
-      gap: 8,
-      padding: 12,
-    },
-    cardTitle: {
-      color: theme.foreground,
-      fontSize: 17,
-      fontWeight: "700",
-    },
-    small: {
-      color: theme.mutedForeground,
-      fontSize: 13,
+      fontSize: 16,
     },
     presetList: {
-      gap: 8,
+      gap: 4,
     },
-    presetItem: {
-      backgroundColor: theme.input,
-      borderColor: theme.border,
-      borderRadius: 10,
-      borderWidth: 1,
-      paddingHorizontal: 10,
-      paddingVertical: 10,
-    },
-    presetItemSelected: {
+    roomCodeContainer: {
+      alignItems: "center",
+      paddingVertical: 12,
       backgroundColor: theme.secondary,
-      borderColor: theme.primary,
-    },
-    presetItemText: {
-      color: theme.foreground,
-      fontWeight: "600",
-    },
-    presetItemTextSelected: {
-      color: theme.secondaryForeground,
+      borderRadius: 8,
+      marginBottom: 4,
     },
     roomCode: {
       color: theme.primary,
-      fontSize: 34,
+      fontSize: 32,
       fontWeight: "800",
-      letterSpacing: 2,
-      marginTop: 6,
+      letterSpacing: 4,
+      fontVariant: ["tabular-nums"],
     },
     actions: {
       flexDirection: "row",
       gap: 8,
-      marginTop: 6,
-    },
-    primaryButton: {
-      alignItems: "center",
-      backgroundColor: theme.primary,
-      borderRadius: 10,
-      flex: 1,
-      paddingVertical: 11,
-    },
-    primaryButtonText: {
-      color: theme.primaryForeground,
-      fontWeight: "700",
-    },
-    secondaryButton: {
-      alignItems: "center",
-      backgroundColor: theme.accent,
-      borderRadius: 10,
-      justifyContent: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 11,
-    },
-    secondaryButtonText: {
-      color: theme.foreground,
-      fontWeight: "700",
     },
     preview: {
       alignItems: "center",
       backgroundColor: "#000000",
-      borderRadius: 14,
-      height: 220,
+      borderRadius: 12,
+      height: 200,
       justifyContent: "center",
       overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.border,
     },
     previewPlaceholder: {
       color: theme.mutedForeground,
       paddingHorizontal: 16,
       textAlign: "center",
-    },
-    signOutButton: {
-      alignItems: "center",
-      borderColor: theme.destructive,
-      borderRadius: 10,
-      borderWidth: 1,
-      paddingVertical: 10,
-    },
-    signOutText: {
-      color: theme.destructive,
-      fontWeight: "700",
     },
   });
 }
