@@ -8,7 +8,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { RTCView } from "react-native-webrtc";
 
 import { useHeliumStreamer } from "../hooks/useHeliumStreamer";
 import { useAppTheme } from "../lib/theme";
@@ -30,7 +29,6 @@ export function StreamerScreen() {
     status,
     roomCode,
     viewerCount,
-    streamUrl,
     isSharing,
     startSharing,
     stopSharing,
@@ -150,16 +148,12 @@ export function StreamerScreen() {
         </View>
 
         <View style={styles.preview}>
-          {isSharing && streamUrl ? (
-            <RTCView
-              mirror={false}
-              objectFit="cover"
-              streamURL={streamUrl}
-              style={styles.video}
-              zOrder={0}
-            />
+          {isSharing ? (
+            <Text style={styles.previewPlaceholder}>
+              Screen capture active. Preview disabled to reduce latency.
+            </Text>
           ) : (
-            <Text style={styles.previewPlaceholder}>Screen preview appears after sharing starts</Text>
+            <Text style={styles.previewPlaceholder}>Start sharing to broadcast this phone screen</Text>
           )}
         </View>
 
@@ -277,10 +271,6 @@ function createStyles(theme: ReturnType<typeof useAppTheme>) {
       height: 220,
       justifyContent: "center",
       overflow: "hidden",
-    },
-    video: {
-      height: "100%",
-      width: "100%",
     },
     previewPlaceholder: {
       color: theme.mutedForeground,

@@ -32,6 +32,25 @@ interface UseHeliumStreamerResult {
   stopSharing: () => void;
 }
 
+async function applyLowLatencyEncoding(
+  sender: ReturnType<RTCPeerConnection["addTrack"]>,
+): Promise<void> {
+  const parameters = sender.getParameters();
+
+  if (!parameters.encodings || parameters.encodings.length === 0) {
+    return;
+  }
+
+  parameters.degradationPreference = "maintain-framerate";
+
+  const [firstEncoding] = parameters.encodings;
+  firstEncoding.maxBitrate = 1_200_000;
+  firstEncoding.maxFramerate = 24;
+  firstEncoding.scaleResolutionDownBy = 2;
+
+  await sender.setParameters(parameters);
+}
+
 function serializeIceCandidate(candidate: RTCIceCandidate): NativeIceCandidateInit {
   const raw = candidate as unknown as {
     candidate?: string;
@@ -125,7 +144,11 @@ export function useHeliumStreamer(
       setViewerCount(Object.keys(peersRef.current).length);
 
       localStream.getTracks().forEach((track) => {
-        peer.addTrack(track, localStream);
+        const sender = peer.addTrack(track, localStream);
+
+        if (track.kind === "video") {
+          void applyLowLatencyEncoding(sender);
+        }
       });
 
       peerWithHandlers.onicecandidate = (event): void => {
