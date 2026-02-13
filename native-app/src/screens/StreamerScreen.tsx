@@ -12,7 +12,7 @@ import { RTCView } from "react-native-webrtc";
 
 import { useHeliumStreamer } from "../hooks/useHeliumStreamer";
 import { useAppTheme } from "../lib/theme";
-import { getPresetIceServers, getPresets } from "../lib/presets";
+import { getPresets } from "../lib/presets";
 import type { NativeIceServer, PresetUser } from "../types/presets";
 
 export function StreamerScreen() {
@@ -35,6 +35,10 @@ export function StreamerScreen() {
     startSharing,
     stopSharing,
   } = useHeliumStreamer(iceServers);
+
+  const selectedPreset = useMemo(() => {
+    return presets.find((preset) => preset.presetId === presetId) ?? null;
+  }, [presetId, presets]);
 
   useEffect(() => {
     const loadPresets = async (): Promise<void> => {
@@ -64,31 +68,28 @@ export function StreamerScreen() {
     };
 
     void loadPresets();
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
-    const loadIceServers = async (): Promise<void> => {
-      if (!presetId) {
-        return;
-      }
+    if (!selectedPreset) {
+      setIceServers([]);
+      return;
+    }
 
-      const token = await getToken();
-      if (!token) {
-        setPresetStatus("missing auth token for preset");
-        return;
-      }
+    try {
+      const rawIceServers = selectedPreset.preset.iceServers;
+      const parsedIceServers =
+        typeof rawIceServers === "string"
+          ? (JSON.parse(rawIceServers) as NativeIceServer[])
+          : rawIceServers;
 
-      try {
-        const servers = await getPresetIceServers(token, presetId);
-        setIceServers(servers);
-        setPresetStatus(`loaded ${servers.length} ICE server entries`);
-      } catch (error) {
-        setPresetStatus(`failed preset load: ${(error as Error).message}`);
-      }
-    };
-
-    void loadIceServers();
-  }, [getToken, presetId]);
+      setIceServers(parsedIceServers ?? []);
+      setPresetStatus(`loaded ${(parsedIceServers ?? []).length} ICE server entries`);
+    } catch {
+      setIceServers([]);
+      setPresetStatus("failed to parse ICE servers from preset");
+    }
+  }, [selectedPreset]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
