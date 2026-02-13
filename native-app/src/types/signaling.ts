@@ -3,17 +3,50 @@ export interface NativeSessionDescriptionInit {
   sdp: string;
 }
 
+export interface NativeIceServer {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+export interface NativeIceCandidateInit {
+  candidate: string;
+  sdpMid?: string | null;
+  sdpMLineIndex?: number | null;
+}
+
 export interface SignalingOfferEvent {
   event: "offer";
   sdp: NativeSessionDescriptionInit;
   senderId: string;
-  iceServers?: RTCIceServer[];
+  iceServers?: NativeIceServer[];
 }
 
 export interface SignalingIceCandidateEvent {
   event: "ice-candidate";
   from: string;
-  candidate: RTCIceCandidateInit;
+  candidate: NativeIceCandidateInit;
+}
+
+export interface SignalingViewerJoinedEvent {
+  event: "viewer-joined";
+  viewerId: string;
+}
+
+export interface SignalingAnswerEvent {
+  event: "answer";
+  from: string;
+  sdp: NativeSessionDescriptionInit;
+}
+
+export interface SignalingViewerLeftEvent {
+  event: "viewer-left";
+  viewerId: string;
+}
+
+export interface SignalingRoomCreatedEvent {
+  event: "room-created";
+  roomId: string;
 }
 
 export interface SignalingJoinedEvent {
@@ -36,4 +69,8 @@ export type IncomingSignalingMessage =
   | SignalingJoinedEvent
   | SignalingErrorEvent
   | SignalingRoomClosedEvent
+  | SignalingViewerJoinedEvent
+  | SignalingViewerLeftEvent
+  | SignalingRoomCreatedEvent
+  | SignalingAnswerEvent
   | { event: "pong" };

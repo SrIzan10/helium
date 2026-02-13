@@ -1,11 +1,13 @@
 # Helium Native (Expo + React Native)
 
-Simple React Native viewer app that:
+Simple React Native streamer app that:
 
 - Authenticates with Clerk (`@clerk/clerk-expo`)
-- Connects to Helium signaling at `/ws/signaling`
-- Joins a 6-digit room and answers WebRTC offers
-- Renders incoming stream with `RTCView`
+- Fetches your Helium presets from `/api/presets`
+- Loads selected preset ICE servers from `/api/presets/:id`
+- Captures Android screen with `getDisplayMedia()`
+- Hosts a room on `/ws/signaling` and streams to connected viewers
+- Uses matching light/dark palette semantics from the Helium web app
 
 ## Auth implementation notes (from Clerk docs via Context7)
 
@@ -41,14 +43,15 @@ pnpm -C native-app prebuild
 pnpm -C native-app android
 ```
 
-## Signaling protocol wired
+## Host signaling protocol wired
 
-Implemented in `native-app/src/hooks/useHeliumViewer.ts`:
+Implemented in `native-app/src/hooks/useHeliumStreamer.ts`:
 
-- send `join-room`
-- receive `offer`
-- create peer connection with provided `iceServers`
-- set remote description and send `answer`
+- send `create-room`
+- receive `viewer-joined`
+- create peer connection with selected preset `iceServers`
+- send `offer` for each viewer
+- receive `answer`
 - exchange `ice-candidate`
-- handle `room-closed`
+- handle `viewer-left`
 - heartbeat with `ping` every 15s

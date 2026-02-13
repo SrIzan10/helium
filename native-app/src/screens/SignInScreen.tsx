@@ -9,11 +9,15 @@ import {
   View,
 } from "react-native";
 
+import { useAppTheme } from "../lib/theme";
+
 export function SignInScreen() {
+  const theme = useAppTheme();
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [status, setStatus] = useState<string>("");
+  const styles = createStyles(theme);
 
   const onSignIn = async (): Promise<void> => {
     if (!isLoaded) {
@@ -73,7 +77,7 @@ export function SignInScreen() {
         {isLoaded ? (
           <Text style={styles.buttonText}>Sign in</Text>
         ) : (
-          <ActivityIndicator color="#ffffff" />
+          <ActivityIndicator color={theme.primaryForeground} />
         )}
       </Pressable>
 
@@ -82,49 +86,51 @@ export function SignInScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "stretch",
-    backgroundColor: "#f4f8fb",
-    flex: 1,
-    gap: 12,
-    justifyContent: "center",
-    padding: 24,
-  },
-  title: {
-    color: "#0f1f33",
-    fontSize: 28,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  subtitle: {
-    color: "#4a5f79",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  input: {
-    backgroundColor: "#ffffff",
-    borderColor: "#c8d7ea",
-    borderRadius: 12,
-    borderWidth: 1,
-    color: "#11243d",
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  button: {
-    alignItems: "center",
-    backgroundColor: "#1366d6",
-    borderRadius: 12,
-    paddingVertical: 12,
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  status: {
-    color: "#405166",
-    fontSize: 13,
-    textAlign: "center",
-  },
-});
+function createStyles(theme: ReturnType<typeof useAppTheme>) {
+  return StyleSheet.create({
+    container: {
+      alignItems: "stretch",
+      backgroundColor: theme.background,
+      flex: 1,
+      gap: 12,
+      justifyContent: "center",
+      padding: 24,
+    },
+    title: {
+      color: theme.foreground,
+      fontSize: 28,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    subtitle: {
+      color: theme.mutedForeground,
+      marginBottom: 12,
+      textAlign: "center",
+    },
+    input: {
+      backgroundColor: theme.input,
+      borderColor: theme.border,
+      borderRadius: 12,
+      borderWidth: 1,
+      color: theme.foreground,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+    },
+    button: {
+      alignItems: "center",
+      backgroundColor: theme.primary,
+      borderRadius: 12,
+      paddingVertical: 12,
+    },
+    buttonText: {
+      color: theme.primaryForeground,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    status: {
+      color: theme.mutedForeground,
+      fontSize: 13,
+      textAlign: "center",
+    },
+  });
+}

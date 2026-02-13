@@ -4,18 +4,20 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { useAppTheme } from "./src/lib/theme";
 import { SignInScreen } from "./src/screens/SignInScreen";
-import { ViewerScreen } from "./src/screens/ViewerScreen";
+import { StreamerScreen } from "./src/screens/StreamerScreen";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 function AuthReadyGate() {
+  const theme = useAppTheme();
   const { isLoaded } = useAuth();
 
   if (!isLoaded) {
     return (
-      <View style={styles.loadingWrap}>
-        <ActivityIndicator color="#125dc6" size="large" />
+      <View style={[styles.loadingWrap, { backgroundColor: theme.background }]}>
+        <ActivityIndicator color={theme.primary} size="large" />
       </View>
     );
   }
@@ -26,17 +28,19 @@ function AuthReadyGate() {
         <SignInScreen />
       </SignedOut>
       <SignedIn>
-        <ViewerScreen />
+        <StreamerScreen />
       </SignedIn>
     </>
   );
 }
 
 export default function App() {
+  const theme = useAppTheme();
+
   if (!publishableKey) {
     return (
-      <View style={styles.loadingWrap}>
-        <Text style={styles.errorText}>
+      <View style={[styles.loadingWrap, { backgroundColor: theme.background }]}>
+        <Text style={[styles.errorText, { color: theme.destructive }]}>
           Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
         </Text>
       </View>
@@ -53,12 +57,10 @@ export default function App() {
 const styles = StyleSheet.create({
   loadingWrap: {
     alignItems: "center",
-    backgroundColor: "#eef4fa",
     flex: 1,
     justifyContent: "center",
   },
   errorText: {
-    color: "#9b1026",
     fontSize: 16,
     paddingHorizontal: 20,
     textAlign: "center",
