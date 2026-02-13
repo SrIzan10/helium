@@ -11,6 +11,7 @@ import { getSignalingUrl } from "../lib/signaling";
 import type {
   IncomingSignalingMessage,
   NativeIceServer,
+  NativeIceCandidateInit,
   NativeSessionDescriptionInit,
 } from "../types/signaling";
 
@@ -29,6 +30,25 @@ interface UseHeliumStreamerResult {
   isSharing: boolean;
   startSharing: () => Promise<void>;
   stopSharing: () => void;
+}
+
+function serializeIceCandidate(candidate: RTCIceCandidate): NativeIceCandidateInit {
+  const raw = candidate as unknown as {
+    candidate?: string;
+    sdpMid?: string | null;
+    sdpMLineIndex?: number | null;
+    toJSON?: () => NativeIceCandidateInit;
+  };
+
+  if (typeof raw.toJSON === "function") {
+    return raw.toJSON();
+  }
+
+  return {
+    candidate: raw.candidate ?? "",
+    sdpMid: raw.sdpMid ?? null,
+    sdpMLineIndex: raw.sdpMLineIndex ?? null,
+  };
 }
 
 export function useHeliumStreamer(
@@ -113,10 +133,15 @@ export function useHeliumStreamer(
           return;
         }
 
+        const candidate = serializeIceCandidate(event.candidate);
+        if (!candidate.candidate) {
+          return;
+        }
+
         sendMessage({
           event: "ice-candidate",
           targetId: viewerId,
-          candidate: event.candidate,
+          candidate,
         });
       };
 
@@ -199,10 +224,22 @@ export function useHeliumStreamer(
     }
 
     setStatus("requesting screen capture");
-    const stream = await mediaDevices.getDisplayMedia();
+    const stream = await (mediaDevices as unknown as {
+      getDisplayMedia: (constraints?: {
+        video?: boolean;
+        audio?: boolean;
+      }) => Promise<MediaStream>;
+    }).getDisplayMedia({
+      video: true,
+      audio: true,
+    });
     streamRef.current = stream;
     setStreamUrl(stream.toURL());
     setIsSharing(true);
+
+    const videoTrackCount = stream.getVideoTracks().length;
+    const audioTrackCount = stream.getAudioTracks().length;
+    setStatus(`capturing ${videoTrackCount} video / ${audioTrackCount} audio tracks`);
 
     stream.getTracks().forEach((track) => {
       const streamTrack = track as unknown as MediaStreamTrack & {
