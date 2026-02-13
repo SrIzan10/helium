@@ -1,8 +1,26 @@
 import { Browser } from "@capacitor/browser";
 
 const HELIUM_URL = "https://helium.srizan.dev";
+const HELIUM_CHROME_INTENT_URL =
+  "intent://helium.srizan.dev#Intent;scheme=https;package=com.android.chrome;end";
+
+function isAndroid(): boolean {
+  return /android/i.test(navigator.userAgent);
+}
 
 async function openHelium(): Promise<void> {
+  if (isAndroid()) {
+    window.location.href = HELIUM_CHROME_INTENT_URL;
+    return;
+  }
+
+  await Browser.open({
+    url: HELIUM_URL,
+    presentationStyle: "fullscreen",
+  });
+}
+
+async function openHeliumFallback(): Promise<void> {
   await Browser.open({
     url: HELIUM_URL,
     presentationStyle: "fullscreen",
@@ -22,12 +40,17 @@ function App() {
         </p>
 
         <button className="cta" type="button" onClick={openHelium}>
-          Open Helium
+          Open Helium in Chrome
+        </button>
+
+        <button className="secondary" type="button" onClick={openHeliumFallback}>
+          Open with default browser
         </button>
 
         <p className="note">
-          If audio is missing in screen capture, update Chrome and Android, then
-          allow audio capture in the system screen-share picker.
+          If Chrome is not installed, use the fallback button. For audio capture,
+          update Chrome and Android, then enable audio in the system
+          screen-share picker.
         </p>
       </section>
     </main>

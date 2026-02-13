@@ -6,9 +6,8 @@ the Helium web app on Android.
 ## Why this approach
 
 - Capacitor keeps the project in TypeScript.
-- The app opens Helium in a Chrome Custom Tab, which is currently the most
-  reliable way to get Android WebRTC features (including screen audio when the
-  device supports it).
+- The app first tries to open Helium directly in Google Chrome on Android.
+- A fallback button opens Helium with the default browser.
 
 ## Setup
 

@@ -78,3 +78,14 @@ h1 {
 .cta:active {
   transform: translateY(1px);
 }
+
+.secondary {
+  border: 1px solid #c8d9ee;
+  border-radius: 12px;
+  padding: 11px 16px;
+  width: fit-content;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #234669;
+  background: #f7fbff;
+}
