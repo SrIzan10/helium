@@ -4,6 +4,7 @@ import { ClerkProvider, SignedIn, SignedOut, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
+import { I18nProvider, useI18n } from "./src/i18n/I18nProvider";
 import { useAppTheme } from "./src/lib/theme";
 import { SignInScreen } from "./src/screens/SignInScreen";
 import { StreamerScreen } from "./src/screens/StreamerScreen";
@@ -35,13 +36,22 @@ function AuthReadyGate() {
 }
 
 export default function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
+  );
+}
+
+function AppContent() {
   const theme = useAppTheme();
+  const { t } = useI18n();
 
   if (!publishableKey) {
     return (
       <View style={[styles.loadingWrap, { backgroundColor: theme.background }]}>
         <Text style={[styles.errorText, { color: theme.destructive }]}>
-          Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
+          {t("missingClerkKey")}
         </Text>
       </View>
     );

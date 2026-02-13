@@ -10,6 +10,8 @@ import {
 } from "react-native";
 
 import { useHeliumStreamer } from "../hooks/useHeliumStreamer";
+import { useI18n } from "../i18n/I18nProvider";
+import type { MessageKey } from "../i18n/messages";
 import { useAppTheme } from "../lib/theme";
 import { getPresets } from "../lib/presets";
 import type { NativeIceServer, PresetUser } from "../types/presets";
@@ -17,16 +19,21 @@ import type { NativeIceServer, PresetUser } from "../types/presets";
 export function StreamerScreen() {
   const { getToken, signOut } = useAuth();
   const theme = useAppTheme();
+  const { t } = useI18n();
 
   const [presets, setPresets] = useState<PresetUser[]>([]);
   const [presetId, setPresetId] = useState<string>("");
   const [iceServers, setIceServers] = useState<NativeIceServer[]>([]);
-  const [presetStatus, setPresetStatus] = useState<string>("loading presets");
+  const [presetStatusKey, setPresetStatusKey] = useState<MessageKey>("loadingPresets");
+  const [presetStatusParams, setPresetStatusParams] = useState<
+    Record<string, string | number> | undefined
+  >(undefined);
 
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const {
-    status,
+    statusKey,
+    statusParams,
     roomCode,
     viewerCount,
     isSharing,
@@ -43,7 +50,8 @@ export function StreamerScreen() {
       const token = await getToken();
 
       if (!token) {
-        setPresetStatus("could not read auth token");
+        setPresetStatusKey("couldNotReadToken");
+        setPresetStatusParams(undefined);
         return;
       }
 
@@ -52,7 +60,8 @@ export function StreamerScreen() {
         setPresets(availablePresets);
 
         if (!availablePresets.length) {
-          setPresetStatus("no presets found");
+          setPresetStatusKey("noPresetsFound");
+          setPresetStatusParams(undefined);
           return;
         }
 
@@ -61,7 +70,8 @@ export function StreamerScreen() {
 
         setPresetId(defaultPreset.presetId);
       } catch (error) {
-        setPresetStatus(`failed to load presets: ${(error as Error).message}`);
+        setPresetStatusKey("failedToLoadPresets");
+        setPresetStatusParams({ message: (error as Error).message });
       }
     };
 
@@ -82,22 +92,24 @@ export function StreamerScreen() {
           : rawIceServers;
 
       setIceServers(parsedIceServers ?? []);
-      setPresetStatus(`loaded ${(parsedIceServers ?? []).length} ICE server entries`);
+      setPresetStatusKey("loadedIceServers");
+      setPresetStatusParams({ count: (parsedIceServers ?? []).length });
     } catch {
       setIceServers([]);
-      setPresetStatus("failed to parse ICE servers from preset");
+      setPresetStatusKey("failedToParsePreset");
+      setPresetStatusParams(undefined);
     }
   }, [selectedPreset]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Helium Streamer</Text>
-        <Text style={styles.subtitle}>Share your Android screen to Helium viewers</Text>
+        <Text style={styles.title}>{t("streamerTitle")}</Text>
+        <Text style={styles.subtitle}>{t("streamerSubtitle")}</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Preset</Text>
-          <Text style={styles.small}>{presetStatus}</Text>
+          <Text style={styles.cardTitle}>{t("preset")}</Text>
+          <Text style={styles.small}>{t(presetStatusKey, presetStatusParams)}</Text>
 
           <View style={styles.presetList}>
             {presets.map((preset) => {
@@ -117,7 +129,7 @@ export function StreamerScreen() {
                     ]}
                   >
                     {preset.preset.name}
-                    {preset.isDefault ? " (default)" : ""}
+                    {preset.isDefault ? ` (${t("defaultLabel")})` : ""}
                   </Text>
                 </Pressable>
               );
@@ -126,9 +138,9 @@ export function StreamerScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Session</Text>
-          <Text style={styles.small}>Status: {status}</Text>
-          <Text style={styles.small}>Viewers: {viewerCount}</Text>
+          <Text style={styles.cardTitle}>{t("session")}</Text>
+          <Text style={styles.small}>{t("status")}: {t(statusKey, statusParams)}</Text>
+          <Text style={styles.small}>{t("viewers")}: {viewerCount}</Text>
           <Text style={styles.roomCode}>{roomCode || "------"}</Text>
 
           <View style={styles.actions}>
@@ -138,11 +150,11 @@ export function StreamerScreen() {
               }}
               style={styles.primaryButton}
             >
-              <Text style={styles.primaryButtonText}>Start screen share</Text>
+              <Text style={styles.primaryButtonText}>{t("startShare")}</Text>
             </Pressable>
 
             <Pressable onPress={stopSharing} style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Stop</Text>
+              <Text style={styles.secondaryButtonText}>{t("stop")}</Text>
             </Pressable>
           </View>
         </View>
@@ -150,10 +162,10 @@ export function StreamerScreen() {
         <View style={styles.preview}>
           {isSharing ? (
             <Text style={styles.previewPlaceholder}>
-              Screen capture active. Preview disabled to reduce latency.
+              {t("previewActive")}
             </Text>
           ) : (
-            <Text style={styles.previewPlaceholder}>Start sharing to broadcast this phone screen</Text>
+            <Text style={styles.previewPlaceholder}>{t("previewIdle")}</Text>
           )}
         </View>
 
@@ -163,7 +175,7 @@ export function StreamerScreen() {
           }}
           style={styles.signOutButton}
         >
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Text style={styles.signOutText}>{t("signOut")}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

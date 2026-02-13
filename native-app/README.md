@@ -8,6 +8,7 @@ Simple React Native streamer app that:
 - Captures Android screen with `getDisplayMedia()`
 - Hosts a room on `/ws/signaling` and streams to connected viewers
 - Uses matching light/dark palette semantics from the Helium web app
+- Includes built-in i18n for English and Spanish based on device locale
 
 ## Auth implementation notes (from Clerk docs via Context7)
 

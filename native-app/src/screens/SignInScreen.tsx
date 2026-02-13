@@ -10,9 +10,11 @@ import {
 } from "react-native";
 
 import { useAppTheme } from "../lib/theme";
+import { useI18n } from "../i18n/I18nProvider";
 
 export function SignInScreen() {
   const theme = useAppTheme();
+  const { t } = useI18n();
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -24,7 +26,7 @@ export function SignInScreen() {
       return;
     }
 
-    setStatus("Signing in...");
+    setStatus(t("signingIn"));
 
     try {
       const attempt = await signIn.create({
@@ -34,33 +36,33 @@ export function SignInScreen() {
 
       if (attempt.status === "complete") {
         await setActive({ session: attempt.createdSessionId });
-        setStatus("Signed in");
+        setStatus(t("signedIn"));
         return;
       }
 
-      setStatus(`Needs extra step: ${attempt.status}`);
+      setStatus(t("needsExtraStep", { status: String(attempt.status) }));
     } catch {
-      setStatus("Sign-in failed");
+      setStatus(t("signInFailed"));
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Helium Native</Text>
-      <Text style={styles.subtitle}>Sign in with Clerk</Text>
+      <Text style={styles.title}>{t("appTitle")}</Text>
+      <Text style={styles.subtitle}>{t("signInSubtitle")}</Text>
 
       <TextInput
         autoCapitalize="none"
         keyboardType="email-address"
         onChangeText={setEmail}
-        placeholder="Email"
+        placeholder={t("email")}
         placeholderTextColor="#7e8794"
         style={styles.input}
         value={email}
       />
       <TextInput
         onChangeText={setPassword}
-        placeholder="Password"
+        placeholder={t("password")}
         placeholderTextColor="#7e8794"
         secureTextEntry
         style={styles.input}
@@ -75,7 +77,7 @@ export function SignInScreen() {
         style={styles.button}
       >
         {isLoaded ? (
-          <Text style={styles.buttonText}>Sign in</Text>
+          <Text style={styles.buttonText}>{t("signIn")}</Text>
         ) : (
           <ActivityIndicator color={theme.primaryForeground} />
         )}

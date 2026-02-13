@@ -8,6 +8,7 @@ import {
 } from "react-native-webrtc";
 
 import { getSignalingUrl } from "../lib/signaling";
+import type { MessageKey } from "../i18n/messages";
 import type {
   IncomingSignalingMessage,
   NativeIceServer,
@@ -23,7 +24,8 @@ interface PeerConnectionHandlers {
 }
 
 interface UseHeliumStreamerResult {
-  status: string;
+  statusKey: MessageKey;
+  statusParams?: Record<string, string | number>;
   roomCode: string;
   streamUrl: string | null;
   viewerCount: number;
@@ -78,7 +80,10 @@ export function useHeliumStreamer(
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const peersRef = useRef<Record<string, RTCPeerConnection>>({});
 
-  const [status, setStatus] = useState<string>("idle");
+  const [statusKey, setStatusKey] = useState<MessageKey>("statusIdle");
+  const [statusParams, setStatusParams] = useState<
+    Record<string, string | number> | undefined
+  >(undefined);
   const [roomCode, setRoomCode] = useState<string>("");
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
   const [viewerCount, setViewerCount] = useState<number>(0);
@@ -126,7 +131,8 @@ export function useHeliumStreamer(
     setRoomCode("");
     setStreamUrl(null);
     setIsSharing(false);
-    setStatus("stopped");
+    setStatusKey("statusStopped");
+    setStatusParams(undefined);
   }, [closeAllPeers]);
 
   const handleViewerJoined = useCallback(
@@ -169,7 +175,8 @@ export function useHeliumStreamer(
       };
 
       peerWithHandlers.onconnectionstatechange = (): void => {
-        setStatus(`viewer ${viewerId}: ${peer.connectionState}`);
+        setStatusKey("statusPeerState");
+        setStatusParams({ state: peer.connectionState });
       };
 
       const offer = (await peer.createOffer()) as NativeSessionDescriptionInit;
@@ -191,12 +198,14 @@ export function useHeliumStreamer(
 
       if (message.event === "room-created") {
         setRoomCode(message.roomId);
-        setStatus(`room code: ${message.roomId}`);
+        setStatusKey("statusRoomCreated");
+        setStatusParams({ roomId: message.roomId });
         return;
       }
 
       if (message.event === "viewer-joined") {
-        setStatus(`viewer joined: ${message.viewerId}`);
+        setStatusKey("statusViewerJoined");
+        setStatusParams(undefined);
         await handleViewerJoined(message.viewerId);
         return;
       }
@@ -232,7 +241,8 @@ export function useHeliumStreamer(
       }
 
       if (message.event === "error") {
-        setStatus(`error: ${message.message}`);
+        setStatusKey("statusError");
+        setStatusParams({ message: message.message });
       }
     },
     [handleViewerJoined],
@@ -242,11 +252,13 @@ export function useHeliumStreamer(
     stopSharing();
 
     if (!iceServers.length) {
-      setStatus("no preset selected");
+      setStatusKey("statusNoPreset");
+      setStatusParams(undefined);
       return;
     }
 
-    setStatus("requesting screen capture");
+    setStatusKey("statusRequestingCapture");
+    setStatusParams(undefined);
     const stream = await (mediaDevices as unknown as {
       getDisplayMedia: (constraints?: {
         video?: boolean;
@@ -264,12 +276,14 @@ export function useHeliumStreamer(
     const audioTrackCount = stream.getAudioTracks().length;
 
     if (!videoTrackCount) {
-      setStatus("screen capture started without video track");
+      setStatusKey("statusNoVideoTrack");
+      setStatusParams(undefined);
       stopSharing();
       return;
     }
 
-    setStatus(`capturing ${videoTrackCount} video / ${audioTrackCount} audio tracks`);
+    setStatusKey("statusCapturing");
+    setStatusParams({ video: videoTrackCount, audio: audioTrackCount });
 
     stream.getTracks().forEach((track) => {
       const streamTrack = track as unknown as MediaStreamTrack & {
@@ -280,13 +294,15 @@ export function useHeliumStreamer(
       };
     });
 
-    setStatus("connecting signaling");
+    setStatusKey("statusConnectingSignaling");
+    setStatusParams(undefined);
 
     const ws = new WebSocket(getSignalingUrl());
     wsRef.current = ws;
 
     ws.onopen = (): void => {
-      setStatus("creating room");
+      setStatusKey("statusCreatingRoom");
+      setStatusParams(undefined);
       sendMessage({ event: "create-room" });
 
       heartbeatRef.current = setInterval(() => {
@@ -299,7 +315,8 @@ export function useHeliumStreamer(
     };
 
     ws.onerror = (): void => {
-      setStatus("websocket error");
+      setStatusKey("statusWebsocketError");
+      setStatusParams(undefined);
     };
 
     ws.onclose = (): void => {
@@ -308,7 +325,8 @@ export function useHeliumStreamer(
         heartbeatRef.current = null;
       }
       if (isSharing) {
-        setStatus("websocket closed");
+        setStatusKey("statusWebsocketClosed");
+        setStatusParams(undefined);
       }
     };
   }, [handleIncomingMessage, iceServers, isSharing, sendMessage, stopSharing]);
@@ -320,7 +338,8 @@ export function useHeliumStreamer(
   }, [stopSharing]);
 
   return {
-    status,
+    statusKey,
+    statusParams,
     roomCode,
     streamUrl,
     viewerCount,
