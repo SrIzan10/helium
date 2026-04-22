@@ -5,6 +5,7 @@
   "home": "Home",
   "about": "About",
   "contact": "Contact",
+  "downloads": "Downloads",
   "stream": "Stream",
   "presets": "Presets",
   "effortlessScreensharing": "effortless screensharing powered by webrtc",
@@ -62,5 +63,18 @@
   "audioSupported": "Audio Supported",
   "failedToStartScreenShare": "Failed to start screen share.",
   "screenRecordingPermissionRequired": "macOS blocked screen capture. Allow Helium in System Settings > Privacy & Security > Screen Recording, then restart Helium.",
-  "screenRecordingPermissionRequiredNoShortcut": "macOS blocked screen capture. Open System Settings > Privacy & Security > Screen Recording, allow Helium, then restart Helium."
+  "screenRecordingPermissionRequiredNoShortcut": "macOS blocked screen capture. Open System Settings > Privacy & Security > Screen Recording, allow Helium, then restart Helium.",
+  "downloadHelium": "Download Helium",
+  "downloadHeliumDescription": "Get the best screensharing experience with our native apps. Available for desktop and Android.",
+  "desktopApp": "Desktop App",
+  "desktopAppDescription": "The full-featured Electron app with system audio support.",
+  "androidApp": "Android App",
+  "androidAppDescription": "Stream directly from your Android device.",
+  "desktopAppNote": "Includes advanced features like system audio capture, venmic support on Linux, and native screen recording permissions.",
+  "androidAppNote": "Install the APK directly on your Android device. Make sure to allow installation from unknown sources if prompted.",
+  "downloadFromGitHub": "Download from GitHub",
+  "viewSourceCode": "View Source Code",
+  "preferTheBrowser": "Prefer the browser?",
+  "browserVersionDescription": "The web version works great too. No installation required — just open the page and start streaming or watching.",
+  "useWebVersion": "Use Web Version"
 }

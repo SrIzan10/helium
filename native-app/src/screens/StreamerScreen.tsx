@@ -2,7 +2,6 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import { getPresets } from "../lib/presets";
 import type { NativeIceServer, PresetUser } from "../types/presets";
 import { Button } from "../components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/Card";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export function StreamerScreen() {
   const { getToken, signOut } = useAuth();
