@@ -1,35 +1,123 @@
 <script setup lang="ts">
+import type { Component } from "vue";
+
+import {
+  Apple,
+  Download,
+  ExternalLink,
+  Info,
+  Laptop,
+  Monitor,
+  Smartphone,
+} from "lucide-vue-next";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
+  CardDescription,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Monitor,
-  Smartphone,
-  Download,
-  Apple,
-  Laptop,
-  Info,
-  ExternalLink,
-} from "lucide-vue-next";
 
 definePageMeta({
   layout: "default",
 });
 
+interface GitHubReleaseAsset {
+  name: string;
+  browser_download_url: string;
+}
+
+interface GitHubRelease {
+  html_url: string;
+  assets: GitHubReleaseAsset[];
+}
+
+interface PlatformDownload {
+  name: string;
+  icon: Component;
+  formats: string;
+  href: string;
+}
+
 const { t } = useI18n();
 
-const platforms = [
-  { name: "Windows", icon: Laptop, formats: "NSIS, Portable" },
-  { name: "macOS", icon: Apple, formats: "DMG, ZIP" },
-  { name: "Linux", icon: Laptop, formats: "AppImage" },
-];
+const repositoryUrl = "https://github.com/SrIzan10/helium";
+const releasesUrl = `${repositoryUrl}/releases`;
+const latestReleaseFallbackUrl = `${releasesUrl}/latest`;
+const latestReleaseApiUrl =
+  "https://api.github.com/repos/SrIzan10/helium/releases/latest";
+const androidSourceUrl = `${repositoryUrl}/tree/main/native-app`;
+
+const { data: latestRelease } = useFetch<GitHubRelease>(latestReleaseApiUrl, {
+  key: "helium-latest-release",
+  server: false,
+  default: () => ({
+    html_url: latestReleaseFallbackUrl,
+    assets: [],
+  }),
+});
+
+const latestReleaseUrl = computed<string>(() => {
+  return latestRelease.value?.html_url ?? latestReleaseFallbackUrl;
+});
+
+const releaseAssets = computed<GitHubReleaseAsset[]>(() => {
+  return latestRelease.value?.assets ?? [];
+});
+
+function findReleaseAsset(
+  patterns: readonly RegExp[],
+): GitHubReleaseAsset | undefined {
+  return releaseAssets.value.find((asset) => {
+    return patterns.some((pattern) => pattern.test(asset.name));
+  });
+}
+
+function getReleaseAssetUrl(
+  patterns: readonly RegExp[],
+  fallbackUrl?: string,
+): string {
+  return (
+    findReleaseAsset(patterns)?.browser_download_url ??
+    fallbackUrl ??
+    latestReleaseUrl.value
+  );
+}
+
+const desktopPlatforms = computed<PlatformDownload[]>(() => {
+  return [
+    {
+      name: "Windows",
+      icon: Laptop,
+      formats: "NSIS, Portable",
+      href: getReleaseAssetUrl([/-Setup-.*\\.exe$/i, /\\.exe$/i]),
+    },
+    {
+      name: "macOS",
+      icon: Apple,
+      formats: "DMG, ZIP",
+      href: getReleaseAssetUrl([/\\.dmg$/i, /-mac\\.zip$/i]),
+    },
+    {
+      name: "Linux",
+      icon: Laptop,
+      formats: "AppImage",
+      href: getReleaseAssetUrl([/\\.AppImage$/i]),
+    },
+  ];
+});
+
+const androidPlatform = computed<PlatformDownload>(() => {
+  return {
+    name: "Android",
+    icon: Smartphone,
+    formats: "APK",
+    href: getReleaseAssetUrl([/^helium-android-.*\\.apk$/i]),
+  };
+});
 </script>
 
 <template>
@@ -44,7 +132,7 @@ const platforms = [
     </div>
 
     <div class="grid md:grid-cols-2 gap-8">
-      <Card class="relative overflow-hidden">
+      <Card class="relative h-full overflow-hidden">
         <div
           class="absolute top-0 right-0 p-3 opacity-10 pointer-events-none"
         >
@@ -59,27 +147,40 @@ const platforms = [
             </div>
             <div>
               <CardTitle>{{ t("desktopApp") }}</CardTitle>
-              <CardDescription>{{ t("desktopAppDescription") }}</CardDescription>
+              <CardDescription>
+                {{ t("desktopAppDescription") }}
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent class="space-y-4">
+        <CardContent class="flex-1 space-y-4">
           <div class="space-y-3">
             <div
-              v-for="platform in platforms"
+              v-for="platform in desktopPlatforms"
               :key="platform.name"
-              class="flex items-center justify-between p-3 rounded-lg bg-muted/50"
             >
-              <div class="flex items-center gap-3">
-                <component
-                  :is="platform.icon"
-                  class="w-4 h-4 text-muted-foreground"
-                />
-                <span class="text-sm font-medium">{{ platform.name }}</span>
-              </div>
-              <Badge variant="secondary" class="text-xs">
-                {{ platform.formats }}
-              </Badge>
+              <a
+                :href="platform.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center justify-between rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div class="flex items-center gap-3">
+                  <component
+                    :is="platform.icon"
+                    class="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground"
+                  />
+                  <span class="text-sm font-medium">{{ platform.name }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <Badge variant="secondary" class="text-xs">
+                    {{ platform.formats }}
+                  </Badge>
+                  <Download
+                    class="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground"
+                  />
+                </div>
+              </a>
             </div>
           </div>
           <div
@@ -89,10 +190,10 @@ const platforms = [
             <span>{{ t("desktopAppNote") }}</span>
           </div>
         </CardContent>
-        <CardFooter class="flex-col gap-3 items-stretch">
+        <CardFooter class="mt-auto flex-col gap-3 items-stretch">
           <Button as-child class="w-full gap-2">
             <a
-              href="https://github.com/SrIzan10/helium/releases"
+              :href="latestReleaseUrl"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -102,7 +203,7 @@ const platforms = [
           </Button>
           <Button as-child variant="outline" class="w-full gap-2">
             <a
-              href="https://github.com/SrIzan10/helium"
+              :href="repositoryUrl"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -113,7 +214,7 @@ const platforms = [
         </CardFooter>
       </Card>
 
-      <Card class="relative overflow-hidden">
+      <Card class="relative h-full overflow-hidden">
         <div
           class="absolute top-0 right-0 p-3 opacity-10 pointer-events-none"
         >
@@ -128,17 +229,38 @@ const platforms = [
             </div>
             <div>
               <CardTitle>{{ t("androidApp") }}</CardTitle>
-              <CardDescription>{{ t("androidAppDescription") }}</CardDescription>
+              <CardDescription>
+                {{ t("androidAppDescription") }}
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent class="space-y-4">
-          <div class="p-3 rounded-lg bg-muted/50 space-y-2">
-            <div class="flex items-center gap-3">
-              <Smartphone class="w-4 h-4 text-muted-foreground" />
-              <span class="text-sm font-medium">Android</span>
-              <Badge variant="secondary" class="text-xs">APK</Badge>
-            </div>
+        <CardContent class="flex-1 space-y-4">
+          <div>
+            <a
+              :href="androidPlatform.href"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex items-center justify-between rounded-lg bg-muted/50 p-3 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div class="flex items-center gap-3">
+                <component
+                  :is="androidPlatform.icon"
+                  class="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground"
+                />
+                <span class="text-sm font-medium">
+                  {{ androidPlatform.name }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Badge variant="secondary" class="text-xs">
+                  {{ androidPlatform.formats }}
+                </Badge>
+                <Download
+                  class="w-4 h-4 text-muted-foreground transition-colors group-hover:text-foreground"
+                />
+              </div>
+            </a>
           </div>
           <div
             class="flex items-start gap-2 text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg"
@@ -147,10 +269,10 @@ const platforms = [
             <span>{{ t("androidAppNote") }}</span>
           </div>
         </CardContent>
-        <CardFooter class="flex-col gap-3 items-stretch">
+        <CardFooter class="mt-auto flex-col gap-3 items-stretch">
           <Button as-child class="w-full gap-2">
             <a
-              href="https://github.com/SrIzan10/helium/releases"
+              :href="androidPlatform.href"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -160,7 +282,7 @@ const platforms = [
           </Button>
           <Button as-child variant="outline" class="w-full gap-2">
             <a
-              href="https://github.com/SrIzan10/helium/tree/main/native-app"
+              :href="androidSourceUrl"
               target="_blank"
               rel="noopener noreferrer"
             >
