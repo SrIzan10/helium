@@ -33,6 +33,7 @@ const navLinks = [
   { to: "/", label: "home" },
   { to: "/stream", label: "stream" },
   { to: "/about", label: "about" },
+  { to: "/downloads", label: "downloads" },
   { to: "/presets", label: "presets", requiresAuth: true },
 ];
 </script>

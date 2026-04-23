@@ -1,3 +1,8 @@
+packages:
+  - .
+  - mobile-wrapper
+  - native-app
+
 onlyBuiltDependencies:
   - '@vencord/venmic'
   - electron

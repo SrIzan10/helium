@@ -5,6 +5,7 @@
   "home": "Inicio",
   "about": "Acerca de",
   "contact": "Contacto",
+  "downloads": "Descargas",
   "stream": "Transmisión",
   "presets": "Ajustes predefinidos",
   "effortlessScreensharing": "comparte pantalla sin complicaciones",
@@ -62,5 +63,18 @@
   "audioSupported": "Audio soportado",
   "failedToStartScreenShare": "No se pudo iniciar el uso compartido de pantalla.",
   "screenRecordingPermissionRequired": "macOS bloqueó la captura de pantalla. Permite Helium en Configuración del Sistema > Privacidad y seguridad > Grabación de pantalla y luego reinicia Helium.",
-  "screenRecordingPermissionRequiredNoShortcut": "macOS bloqueó la captura de pantalla. Abre Configuración del Sistema > Privacidad y seguridad > Grabación de pantalla, permite Helium y luego reinicia Helium."
+  "screenRecordingPermissionRequiredNoShortcut": "macOS bloqueó la captura de pantalla. Abre Configuración del Sistema > Privacidad y seguridad > Grabación de pantalla, permite Helium y luego reinicia Helium.",
+  "downloadHelium": "Descargar Helium",
+  "downloadHeliumDescription": "Obtén la mejor experiencia de compartir pantalla con nuestras aplicaciones nativas. Disponible para escritorio y Android.",
+  "desktopApp": "Aplicación de Escritorio",
+  "desktopAppDescription": "La aplicación Electron completa con soporte de audio del sistema.",
+  "androidApp": "Aplicación Android",
+  "androidAppDescription": "Transmite directamente desde tu dispositivo Android.",
+  "desktopAppNote": "Incluye funciones avanzadas como captura de audio del sistema, soporte de venmic en Linux y permisos de grabación de pantalla nativos.",
+  "androidAppNote": "Instala el APK directamente en tu dispositivo Android. Asegúrate de permitir la instalación desde fuentes desconocidas si se te solicita.",
+  "downloadFromGitHub": "Descargar desde GitHub",
+  "viewSourceCode": "Ver Código Fuente",
+  "preferTheBrowser": "¿Prefieres el navegador?",
+  "browserVersionDescription": "La versión web también funciona muy bien. No requiere instalación: simplemente abre la página y empieza a transmitir o ver.",
+  "useWebVersion": "Usar Versión Web"
 }

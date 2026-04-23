@@ -11,7 +11,8 @@ electron/dist
 dist-electron
 
 # Node dependencies
-node_modules
+*node_modules/
+node_modules/
 
 # Logs
 logs
@@ -26,3 +27,10 @@ logs
 .env
 .env.*
 !.env.example
+
+*credentials.json
+
+native-app/.expo
+native-app/android
+native-app/ios
+native-app/dist

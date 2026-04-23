@@ -11,7 +11,7 @@
   "main": "./electron/dist/main/index.js",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -26,7 +26,11 @@
     "electron:publish": "pnpm electron:compile && electron-builder --publish always",
     "electron:publish:win": "pnpm electron:compile && electron-builder --win --publish always",
     "electron:publish:mac": "pnpm electron:compile && electron-builder --mac --publish always",
-    "electron:publish:linux": "pnpm electron:compile && electron-builder --linux --publish always"
+    "electron:publish:linux": "pnpm electron:compile && electron-builder --linux --publish always",
+    "native:install": "pnpm -C native-app install",
+    "native:android": "pnpm -C native-app android",
+    "native:start": "pnpm -C native-app start",
+    "native:typecheck": "pnpm -C native-app typecheck"
   },
   "dependencies": {
     "@clerk/localizations": "^3.34.0",

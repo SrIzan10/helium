@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Helium Native",
+    "slug": "helium",
+    "scheme": "heliumnative",
+    "version": "0.1.0",
+    "icon": "./assets/images/icon.png",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "android": {
+      "package": "dev.srizan.helium.viewer",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#c026d3",
+        "monochromeImage": "./assets/images/adaptive-icon-monochrome.png"
+      }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "./plugins/withWebRTCMediaProjection",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#fdfbff",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "dark": {
+            "backgroundColor": "#1e1b2e",
+            "image": "./assets/images/splash-icon-dark.png"
+          }
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "dev.srizan.helium.viewer"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "abfcbaaf-3aed-4919-a172-429faeae8ac3"
+      }
+    },
+    "owner": "srizan10"
+  }
+}
