@@ -25,6 +25,13 @@ definePageMeta({
   layout: "default",
 });
 
+interface PlatformDownload {
+  name: string;
+  icon: Component;
+  formats: string;
+  href: string;
+}
+
 interface GitHubReleaseAsset {
   name: string;
   browser_download_url: string;
@@ -33,13 +40,6 @@ interface GitHubReleaseAsset {
 interface GitHubRelease {
   html_url: string;
   assets: GitHubReleaseAsset[];
-}
-
-interface PlatformDownload {
-  name: string;
-  icon: Component;
-  formats: string;
-  href: string;
 }
 
 const { t } = useI18n();
@@ -76,15 +76,8 @@ function findReleaseAsset(
   });
 }
 
-function getReleaseAssetUrl(
-  patterns: readonly RegExp[],
-  fallbackUrl?: string,
-): string {
-  return (
-    findReleaseAsset(patterns)?.browser_download_url ??
-    fallbackUrl ??
-    latestReleaseUrl.value
-  );
+function getReleaseAssetUrl(patterns: readonly RegExp[]): string {
+  return findReleaseAsset(patterns)?.browser_download_url ?? latestReleaseUrl.value;
 }
 
 const desktopPlatforms = computed<PlatformDownload[]>(() => {
@@ -93,19 +86,19 @@ const desktopPlatforms = computed<PlatformDownload[]>(() => {
       name: "Windows",
       icon: Laptop,
       formats: "NSIS, Portable",
-      href: getReleaseAssetUrl([/-Setup-.*\\.exe$/i, /\\.exe$/i]),
+      href: getReleaseAssetUrl([/-Setup-.*\.exe$/i, /\.exe$/i]),
     },
     {
       name: "macOS",
       icon: Apple,
       formats: "DMG, ZIP",
-      href: getReleaseAssetUrl([/\\.dmg$/i, /-mac\\.zip$/i]),
+      href: getReleaseAssetUrl([/\.dmg$/i, /-mac\.zip$/i]),
     },
     {
       name: "Linux",
       icon: Laptop,
       formats: "AppImage",
-      href: getReleaseAssetUrl([/\\.AppImage$/i]),
+      href: getReleaseAssetUrl([/\.AppImage$/i]),
     },
   ];
 });
@@ -115,7 +108,7 @@ const androidPlatform = computed<PlatformDownload>(() => {
     name: "Android",
     icon: Smartphone,
     formats: "APK",
-    href: getReleaseAssetUrl([/^helium-android-.*\\.apk$/i]),
+    href: getReleaseAssetUrl([/^helium-android-.*\.apk$/i]),
   };
 });
 </script>
