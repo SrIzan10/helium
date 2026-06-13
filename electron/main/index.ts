@@ -3,6 +3,7 @@ import {
   BrowserWindow,
   ipcMain,
   desktopCapturer,
+  dialog,
   session,
   shell,
   systemPreferences,
@@ -48,6 +49,13 @@ const NUXT_DEV_URL = process.env.NUXT_DEV_URL || 'http://localhost:3000';
 
 let mainWindow: BrowserWindow | null = null;
 let venmicManager: VenmicManager | null = null;
+let isStreamingActive = false;
+let streamingClosePrompt = {
+  title: 'Active stream',
+  message: 'A stream is still active. Closing Helium will stop it for all viewers.',
+  confirmLabel: 'Stop stream and close',
+  cancelLabel: 'Keep streaming',
+};
 
 console.log('[Helium] Platform:', process.platform);
 console.log('[Helium] Wayland:', isWayland);
@@ -88,6 +96,27 @@ function createWindow(): void {
     const prodUrl = 'https://helium.srizan.dev';
     mainWindow.loadURL(prodUrl);
   }
+
+  mainWindow.on('close', (event) => {
+    if (!isStreamingActive || !mainWindow) return;
+
+    const choice = dialog.showMessageBoxSync(mainWindow, {
+      type: 'warning',
+      title: streamingClosePrompt.title,
+      message: streamingClosePrompt.message,
+      buttons: [streamingClosePrompt.cancelLabel, streamingClosePrompt.confirmLabel],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+
+    if (choice === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    isStreamingActive = false;
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -152,7 +181,7 @@ ipcMain.handle('helium:get-platform', () => {
     isWindows,
     isWayland,
     isElectron: true,
-    supportsLoopbackAudio: isWindows || isMac,
+    supportsLoopbackAudio: isWindows || isMac || isLinux,
     supportsVenmic: isLinux && (venmicManager?.isAvailable() ?? false),
   };
 });
@@ -222,6 +251,19 @@ ipcMain.handle('helium:open-screen-permission-settings', async () => {
     return false;
   }
 });
+
+ipcMain.handle(
+  'helium:set-streaming-active',
+  (_event: IpcMainInvokeEvent, active: boolean, promptOptions?: typeof streamingClosePrompt) => {
+    isStreamingActive = active;
+
+    if (promptOptions) {
+      streamingClosePrompt = promptOptions;
+    }
+
+    return true;
+  },
+);
 
 const gotTheLock = app.requestSingleInstanceLock();
 

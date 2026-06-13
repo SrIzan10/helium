@@ -54,6 +54,20 @@ async function deleteRoom(roomId: string) {
   await db.delete(schema.rooms).where(eq(schema.rooms.id, roomId));
 }
 
+async function closeRoom(roomId: string, broadcasterId: string) {
+  const room = await getRoom(roomId);
+  if (!room || room.broadcaster !== broadcasterId) return;
+
+  room.viewers.forEach((viewerId: string) => {
+    const viewer = activePeers.get(viewerId);
+    if (viewer) {
+      viewer.send(JSON.stringify({ event: 'room-closed' }));
+    }
+  });
+
+  await deleteRoom(roomId);
+}
+
 async function addViewerToRoom(roomId: string, viewerId: string) {
   await db.insert(schema.roomViewers).values({
     roomId,
@@ -103,6 +117,9 @@ export default defineWebSocketHandler({
       const roomId = generateRoomId();
       await createRoom(roomId, peer.id);
       peer.send(JSON.stringify({ event: 'room-created', roomId }));
+    }
+    if (msg.event === 'close-room') {
+      await closeRoom(msg.roomId, peer.id);
     }
     if (msg.event === 'join-room') {
       const room = await getRoom(msg.roomId);

@@ -35,6 +35,13 @@ export interface VenmicLinkOptions {
   only_default_speakers?: boolean;
 }
 
+export interface StreamingClosePromptOptions {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  cancelLabel: string;
+}
+
 const heliumElectronAPI = {
   isElectron: true as const,
   getPlatform: (): Promise<PlatformInfo> => ipcRenderer.invoke('helium:get-platform'),
@@ -59,6 +66,10 @@ const heliumElectronAPI = {
   checkScreenPermission: (): Promise<string> => ipcRenderer.invoke('helium:check-screen-permission'),
   openScreenPermissionSettings: (): Promise<boolean> =>
     ipcRenderer.invoke('helium:open-screen-permission-settings'),
+  setStreamingActive: (
+    active: boolean,
+    promptOptions?: StreamingClosePromptOptions,
+  ): Promise<boolean> => ipcRenderer.invoke('helium:set-streaming-active', active, promptOptions),
 };
 
 contextBridge.exposeInMainWorld('heliumElectron', heliumElectronAPI);

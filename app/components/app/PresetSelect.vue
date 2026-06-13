@@ -14,6 +14,7 @@ import { useStreamerStore } from "~/state/streamer";
 const { t } = useI18n();
 const router = useRouter();
 const selectedValue = ref("");
+const modelValue = defineModel<string>({ default: "" });
 const presets = ref<PresetUser[]>([]);
 const loading = ref(true);
 const streamerStore = useStreamerStore();
@@ -27,6 +28,7 @@ onMounted(async () => {
       const defaultPreset = presets.value.find((p) => p.isDefault);
       if (defaultPreset) {
         selectedValue.value = defaultPreset.presetId;
+        modelValue.value = defaultPreset.presetId;
         // Load the default preset's ice servers
         loadPresetIceServers(defaultPreset.presetId);
       }
@@ -60,9 +62,19 @@ watch(selectedValue, (newValue) => {
   if (newValue === "create-new") {
     router.push("/presets/new");
     selectedValue.value = "";
+    modelValue.value = "";
   } else if (newValue) {
+    modelValue.value = newValue;
     // Load ice servers for the selected preset
     loadPresetIceServers(newValue);
+  } else {
+    modelValue.value = "";
+  }
+});
+
+watch(modelValue, (newValue) => {
+  if (newValue !== selectedValue.value) {
+    selectedValue.value = newValue;
   }
 });
 </script>

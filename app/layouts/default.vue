@@ -32,10 +32,14 @@ onMounted(async () => {
 const navLinks = [
   { to: "/", label: "home" },
   { to: "/stream", label: "stream" },
-  { to: "/about", label: "about" },
-  { to: "/downloads", label: "downloads" },
+  { to: "/about", label: "about", hideInElectron: true },
+  { to: "/downloads", label: "downloads", hideInElectron: true },
   { to: "/presets", label: "presets", requiresAuth: true },
 ];
+
+const visibleNavLinks = computed(() => {
+  return navLinks.filter((link) => !isElectron.value || !link.hideInElectron);
+});
 </script>
 
 <template>
@@ -56,7 +60,7 @@ const navLinks = [
           <span class="leading-none">helium</span>
         </NuxtLink>
         <nav class="hidden md:flex space-x-4">
-          <template v-for="link in navLinks" :key="link.to">
+          <template v-for="link in visibleNavLinks" :key="link.to">
             <ClientOnly v-if="link.requiresAuth">
               <SignedIn>
                 <NuxtLink
@@ -114,7 +118,7 @@ const navLinks = [
               <SheetTitle>{{ t("menu") || "Menu" }}</SheetTitle>
             </SheetHeader>
             <nav class="flex flex-col space-y-4 mt-6">
-              <template v-for="link in navLinks" :key="link.to">
+              <template v-for="link in visibleNavLinks" :key="link.to">
                 <ClientOnly v-if="link.requiresAuth">
                   <SignedIn>
                     <NuxtLink

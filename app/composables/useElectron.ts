@@ -24,6 +24,13 @@ export interface VenmicLinkOptions {
   only_default_speakers?: boolean;
 }
 
+export interface StreamingClosePromptOptions {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  cancelLabel: string;
+}
+
 interface HeliumElectronAPI {
   isElectron: boolean;
   getPlatform: () => Promise<PlatformInfo>;
@@ -37,6 +44,10 @@ interface HeliumElectronAPI {
   venmicUnlink: () => Promise<boolean>;
   checkScreenPermission: () => Promise<string>;
   openScreenPermissionSettings: () => Promise<boolean>;
+  setStreamingActive: (
+    active: boolean,
+    promptOptions?: StreamingClosePromptOptions,
+  ) => Promise<boolean>;
 }
 
 declare global {
@@ -235,6 +246,23 @@ export function useElectron() {
     }
   };
 
+  const setStreamingActive = async (
+    active: boolean,
+    promptOptions?: StreamingClosePromptOptions,
+  ): Promise<boolean> => {
+    if (!checkElectron()) return false;
+
+    try {
+      return await window.heliumElectron!.setStreamingActive(
+        active,
+        promptOptions,
+      );
+    } catch (error) {
+      console.error("[useElectron] Failed to set streaming status:", error);
+      return false;
+    }
+  };
+
   onMounted(() => {
     checkElectron();
     if (isElectron.value) {
@@ -271,6 +299,7 @@ export function useElectron() {
     unlinkVenmicAudio,
     getScreenPermissionStatus,
     openScreenPermissionSettings,
+    setStreamingActive,
 
     startScreenShareWithAudio,
     stopScreenShare,
