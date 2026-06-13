@@ -79,8 +79,8 @@
   "desktopAppDescription": "La aplicación Electron completa con soporte de audio del sistema.",
   "androidApp": "Aplicación Android",
   "androidAppDescription": "Transmite directamente desde tu dispositivo Android.",
-  "desktopAppNote": "Incluye funciones avanzadas como captura de audio del sistema, soporte de venmic en Linux y permisos de grabación de pantalla nativos.",
-  "androidAppNote": "Instala el APK directamente en tu dispositivo Android. Asegúrate de permitir la instalación desde fuentes desconocidas si se te solicita.",
+  "desktopAppNote": "Incluye funciones avanzadas como captura de audio del sistema y permisos de grabación de pantalla nativos.",
+  "androidAppNote": "Instala el APK directamente en tu dispositivo Android.",
   "downloadFromGitHub": "Descargar desde GitHub",
   "viewSourceCode": "Ver Código Fuente"
 }

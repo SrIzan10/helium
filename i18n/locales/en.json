@@ -79,8 +79,8 @@
   "desktopAppDescription": "The full-featured Electron app with system audio support.",
   "androidApp": "Android App",
   "androidAppDescription": "Stream directly from your Android device.",
-  "desktopAppNote": "Includes advanced features like system audio capture, venmic support on Linux, and native screen recording permissions.",
-  "androidAppNote": "Install the APK directly on your Android device. Make sure to allow installation from unknown sources if prompted.",
+  "desktopAppNote": "Includes advanced features like system audio capture and native screen recording permissions.",
+  "androidAppNote": "Install the APK directly on your Android device.",
   "downloadFromGitHub": "Download from GitHub",
   "viewSourceCode": "View Source Code"
 }
