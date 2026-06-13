@@ -2,8 +2,9 @@
 import SignInDialog from "~/components/app/SignInDialog.vue";
 import ThemeDropdown from "~/components/ui/ThemeDropdown.vue";
 import LanguageSwitcher from "~/components/app/LanguageSwitcher.vue";
-import { useElectron } from "~/composables/useElectron";
+import { useElectron, type UpdateStatusPayload } from "~/composables/useElectron";
 import "vue-sonner/style.css";
+import { toast } from "vue-sonner";
 import { Toaster } from "@/components/ui/sonner";
 import {
   Sheet,
@@ -17,7 +18,15 @@ import LogoSvg from "~/assets/logo.svg?component";
 
 const { t } = useI18n();
 const mobileMenuOpen = ref(false);
-const { isElectron, platformInfo, getPlatformInfo } = useElectron();
+const {
+  isElectron,
+  platformInfo,
+  getPlatformInfo,
+  installUpdate,
+  onUpdateStatus,
+} = useElectron();
+let removeUpdateStatusListener: (() => void) | undefined;
+let updateProgressToastId: string | number | undefined;
 
 const isMacElectron = computed(() => {
   return isElectron.value && platformInfo.value?.isMac;
@@ -39,6 +48,66 @@ const navLinks = [
 
 const visibleNavLinks = computed(() => {
   return navLinks.filter((link) => !isElectron.value || !link.hideInElectron);
+});
+
+const showUpdateMessage = (payload: UpdateStatusPayload): void => {
+  if (payload.status === "checking") {
+    return;
+  }
+
+  if (payload.status === "available") {
+    toast.info(t("updateAvailable"), {
+      description: payload.version
+        ? t("updateAvailableDescription", { version: payload.version })
+        : t("updateAvailableDescriptionWithoutVersion"),
+    });
+    return;
+  }
+
+  if (payload.status === "not-available") {
+    return;
+  }
+
+  if (payload.status === "download-progress") {
+    const percent = payload.percent ?? 0;
+    updateProgressToastId = toast.loading(t("updateDownloading"), {
+      id: updateProgressToastId,
+      description: t("updateDownloadProgress", { percent }),
+    });
+    return;
+  }
+
+  if (payload.status === "downloaded") {
+    if (updateProgressToastId) {
+      toast.dismiss(updateProgressToastId);
+      updateProgressToastId = undefined;
+    }
+
+    toast.success(t("updateReady"), {
+      description: payload.version
+        ? t("updateReadyDescription", { version: payload.version })
+        : t("updateReadyDescriptionWithoutVersion"),
+      action: {
+        label: t("restartToUpdate"),
+        onClick: () => {
+          void installUpdate();
+        },
+      },
+    });
+    return;
+  }
+
+  toast.error(t("updateFailed"), {
+    description: payload.message || t("updateFailedDescription"),
+  });
+};
+
+onMounted(() => {
+  removeUpdateStatusListener = onUpdateStatus(showUpdateMessage);
+});
+
+onUnmounted(() => {
+  removeUpdateStatusListener?.();
 });
 </script>
 

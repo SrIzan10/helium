@@ -42,6 +42,21 @@ export interface StreamingClosePromptOptions {
   cancelLabel: string;
 }
 
+export type UpdateStatus =
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'download-progress'
+  | 'downloaded'
+  | 'error';
+
+export interface UpdateStatusPayload {
+  status: UpdateStatus;
+  version?: string;
+  percent?: number;
+  message?: string;
+}
+
 const heliumElectronAPI = {
   isElectron: true as const,
   getPlatform: (): Promise<PlatformInfo> => ipcRenderer.invoke('helium:get-platform'),
@@ -70,6 +85,16 @@ const heliumElectronAPI = {
     active: boolean,
     promptOptions?: StreamingClosePromptOptions,
   ): Promise<boolean> => ipcRenderer.invoke('helium:set-streaming-active', active, promptOptions),
+  checkForUpdates: (): Promise<boolean> => ipcRenderer.invoke('helium:check-for-updates'),
+  installUpdate: (): Promise<boolean> => ipcRenderer.invoke('helium:install-update'),
+  onUpdateStatus: (callback: (payload: UpdateStatusPayload) => void): (() => void) => {
+    const listener = (_event: IpcRendererEvent, payload: UpdateStatusPayload): void => {
+      callback(payload);
+    };
+
+    ipcRenderer.on('helium:update-status', listener);
+    return () => ipcRenderer.removeListener('helium:update-status', listener);
+  },
 };
 
 contextBridge.exposeInMainWorld('heliumElectron', heliumElectronAPI);

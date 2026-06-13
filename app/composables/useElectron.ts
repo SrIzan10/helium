@@ -31,6 +31,21 @@ export interface StreamingClosePromptOptions {
   cancelLabel: string;
 }
 
+export type UpdateStatus =
+  | "checking"
+  | "available"
+  | "not-available"
+  | "download-progress"
+  | "downloaded"
+  | "error";
+
+export interface UpdateStatusPayload {
+  status: UpdateStatus;
+  version?: string;
+  percent?: number;
+  message?: string;
+}
+
 interface HeliumElectronAPI {
   isElectron: boolean;
   getPlatform: () => Promise<PlatformInfo>;
@@ -48,6 +63,9 @@ interface HeliumElectronAPI {
     active: boolean,
     promptOptions?: StreamingClosePromptOptions,
   ) => Promise<boolean>;
+  checkForUpdates: () => Promise<boolean>;
+  installUpdate: () => Promise<boolean>;
+  onUpdateStatus: (callback: (payload: UpdateStatusPayload) => void) => () => void;
 }
 
 declare global {
@@ -263,6 +281,33 @@ export function useElectron() {
     }
   };
 
+  const checkForUpdates = async (): Promise<boolean> => {
+    if (!checkElectron()) return false;
+
+    try {
+      return await window.heliumElectron!.checkForUpdates();
+    } catch (error) {
+      console.error("[useElectron] Failed to check for updates:", error);
+      return false;
+    }
+  };
+
+  const installUpdate = async (): Promise<boolean> => {
+    if (!checkElectron()) return false;
+
+    try {
+      return await window.heliumElectron!.installUpdate();
+    } catch (error) {
+      console.error("[useElectron] Failed to install update:", error);
+      return false;
+    }
+  };
+
+  const onUpdateStatus = (callback: (payload: UpdateStatusPayload) => void): (() => void) => {
+    if (!checkElectron()) return () => {};
+    return window.heliumElectron!.onUpdateStatus(callback);
+  };
+
   onMounted(() => {
     checkElectron();
     if (isElectron.value) {
@@ -300,6 +345,9 @@ export function useElectron() {
     getScreenPermissionStatus,
     openScreenPermissionSettings,
     setStreamingActive,
+    checkForUpdates,
+    installUpdate,
+    onUpdateStatus,
 
     startScreenShareWithAudio,
     stopScreenShare,

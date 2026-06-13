@@ -82,5 +82,16 @@
   "desktopAppNote": "Incluye funciones avanzadas como captura de audio del sistema y permisos de grabación de pantalla nativos.",
   "androidAppNote": "Instala el APK directamente en tu dispositivo Android.",
   "downloadFromGitHub": "Descargar desde GitHub",
-  "viewSourceCode": "Ver Código Fuente"
+  "viewSourceCode": "Ver Código Fuente",
+  "updateAvailable": "Actualización disponible",
+  "updateAvailableDescription": "Helium {version} se está descargando en segundo plano.",
+  "updateAvailableDescriptionWithoutVersion": "Una nueva actualización de Helium se está descargando en segundo plano.",
+  "updateDownloading": "Descargando actualización",
+  "updateDownloadProgress": "{percent}% descargado",
+  "updateReady": "Actualización lista",
+  "updateReadyDescription": "Helium {version} está listo. Reinicia para instalarlo ahora.",
+  "updateReadyDescriptionWithoutVersion": "Una actualización de Helium está lista. Reinicia para instalarla ahora.",
+  "restartToUpdate": "Reiniciar",
+  "updateFailed": "Error al actualizar",
+  "updateFailedDescription": "Helium no pudo buscar o descargar la actualización."
 }

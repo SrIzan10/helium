@@ -10,6 +10,7 @@ import {
   type IpcMainInvokeEvent,
   type DesktopCapturerSource,
 } from 'electron';
+import electronUpdater, { type AppUpdater, type ProgressInfo, type UpdateInfo } from 'electron-updater';
 import path from 'path';
 import { VenmicManager, type VenmicLinkOptions } from './venmic';
 
@@ -50,6 +51,7 @@ const NUXT_DEV_URL = process.env.NUXT_DEV_URL || 'http://localhost:3000';
 let mainWindow: BrowserWindow | null = null;
 let venmicManager: VenmicManager | null = null;
 let isStreamingActive = false;
+let autoUpdaterConfigured = false;
 let streamingClosePrompt = {
   title: 'Active stream',
   message: 'A stream is still active. Closing Helium will stop it for all viewers.',
@@ -60,6 +62,83 @@ let streamingClosePrompt = {
 console.log('[Helium] Platform:', process.platform);
 console.log('[Helium] Wayland:', isWayland);
 console.log('[Helium] XDG_SESSION_TYPE:', process.env.XDG_SESSION_TYPE);
+
+type UpdateStatus =
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'download-progress'
+  | 'downloaded'
+  | 'error';
+
+interface UpdateStatusPayload {
+  status: UpdateStatus;
+  version?: string;
+  percent?: number;
+  message?: string;
+}
+
+function getAutoUpdater(): AppUpdater {
+  const { autoUpdater } = electronUpdater;
+  return autoUpdater;
+}
+
+function sendUpdateStatus(payload: UpdateStatusPayload): void {
+  for (const window of BrowserWindow.getAllWindows()) {
+    if (!window.isDestroyed()) {
+      window.webContents.send('helium:update-status', payload);
+    }
+  }
+}
+
+function toUpdateStatus(status: UpdateStatus, info?: UpdateInfo): UpdateStatusPayload {
+  return {
+    status,
+    version: info?.version,
+  };
+}
+
+function setupAutoUpdater(): void {
+  if (isDev || !app.isPackaged || autoUpdaterConfigured) return;
+
+  autoUpdaterConfigured = true;
+  const autoUpdater = getAutoUpdater();
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    sendUpdateStatus({ status: 'checking' });
+  });
+
+  autoUpdater.on('update-available', (info: UpdateInfo) => {
+    sendUpdateStatus(toUpdateStatus('available', info));
+  });
+
+  autoUpdater.on('update-not-available', (info: UpdateInfo) => {
+    sendUpdateStatus(toUpdateStatus('not-available', info));
+  });
+
+  autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+    sendUpdateStatus({
+      status: 'download-progress',
+      percent: Math.round(progress.percent),
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+    sendUpdateStatus(toUpdateStatus('downloaded', info));
+  });
+
+  autoUpdater.on('error', (error: Error) => {
+    console.error('[Helium] Auto updater error:', error);
+    sendUpdateStatus({ status: 'error', message: error.message });
+  });
+
+  void autoUpdater.checkForUpdatesAndNotify().catch((error: unknown) => {
+    console.error('[Helium] Failed to check for updates:', error);
+  });
+}
 
 if (isLinux) {
   try {
@@ -124,6 +203,10 @@ function createWindow(): void {
 
   mainWindow.on('page-title-updated', (e) => {
     e.preventDefault();
+  });
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    setupAutoUpdater();
   });
 }
 
@@ -264,6 +347,26 @@ ipcMain.handle(
     return true;
   },
 );
+
+ipcMain.handle('helium:check-for-updates', async () => {
+  if (isDev || !app.isPackaged) return false;
+
+  try {
+    await getAutoUpdater().checkForUpdatesAndNotify();
+    return true;
+  } catch (error) {
+    console.error('[Helium] Manual update check failed:', error);
+    return false;
+  }
+});
+
+ipcMain.handle('helium:install-update', () => {
+  if (isDev || !app.isPackaged) return false;
+
+  isStreamingActive = false;
+  getAutoUpdater().quitAndInstall(false, true);
+  return true;
+});
 
 const gotTheLock = app.requestSingleInstanceLock();
 

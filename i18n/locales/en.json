@@ -82,5 +82,16 @@
   "desktopAppNote": "Includes advanced features like system audio capture and native screen recording permissions.",
   "androidAppNote": "Install the APK directly on your Android device.",
   "downloadFromGitHub": "Download from GitHub",
-  "viewSourceCode": "View Source Code"
+  "viewSourceCode": "View Source Code",
+  "updateAvailable": "Update available",
+  "updateAvailableDescription": "Helium {version} is downloading in the background.",
+  "updateAvailableDescriptionWithoutVersion": "A new Helium update is downloading in the background.",
+  "updateDownloading": "Downloading update",
+  "updateDownloadProgress": "{percent}% downloaded",
+  "updateReady": "Update ready",
+  "updateReadyDescription": "Helium {version} is ready. Restart to install it now.",
+  "updateReadyDescriptionWithoutVersion": "A Helium update is ready. Restart to install it now.",
+  "restartToUpdate": "Restart",
+  "updateFailed": "Update failed",
+  "updateFailedDescription": "Helium could not check for or download the update."
 }
