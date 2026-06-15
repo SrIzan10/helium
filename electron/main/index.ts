@@ -10,7 +10,7 @@ import {
   type IpcMainInvokeEvent,
   type DesktopCapturerSource,
 } from 'electron';
-import electronUpdater, { type AppUpdater, type ProgressInfo, type UpdateInfo } from 'electron-updater';
+import { autoUpdater, type AppUpdater, type ProgressInfo, type UpdateInfo } from 'electron-updater';
 import path from 'path';
 import { VenmicManager, type VenmicLinkOptions } from './venmic';
 
@@ -79,7 +79,6 @@ interface UpdateStatusPayload {
 }
 
 function getAutoUpdater(): AppUpdater {
-  const { autoUpdater } = electronUpdater;
   return autoUpdater;
 }
 
