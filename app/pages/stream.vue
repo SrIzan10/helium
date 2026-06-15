@@ -55,6 +55,94 @@
 
             <Separator />
 
+            <div class="space-y-3">
+              <div class="space-y-1">
+                <Label
+                  class="text-xs text-muted-foreground uppercase tracking-wider font-semibold"
+                >
+                  {{ $t("streamQuality") }}
+                </Label>
+                <p class="text-xs text-muted-foreground">
+                  {{ $t("streamQualityDescription") }}
+                </p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  v-for="preset in qualityPresets"
+                  :key="preset.id"
+                  type="button"
+                  class="rounded-lg border px-2.5 py-2 text-left transition hover:border-primary/60 hover:bg-primary/5"
+                  :class="[
+                    isSelectedQuickPreset(preset)
+                      ? 'border-primary bg-primary/10 shadow-sm'
+                      : 'border-border bg-background',
+                  ]"
+                  @click="applyQuickPreset(preset)"
+                >
+                  <span class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-semibold">
+                      {{ $t(preset.labelKey) }}
+                    </span>
+                    <Badge
+                      v-if="isSelectedQuickPreset(preset)"
+                      variant="secondary"
+                      class="text-[9px] uppercase tracking-wide"
+                    >
+                      {{ $t("active") }}
+                    </Badge>
+                  </span>
+                  <span class="mt-0.5 block text-[11px] text-muted-foreground">
+                    {{ $t(preset.summaryKey) }}
+                  </span>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div class="space-y-1.5">
+                  <Label class="text-xs text-muted-foreground">
+                    {{ $t("quality") }}
+                  </Label>
+                  <Select v-model="selectedVideoQuality">
+                    <SelectTrigger class="w-full h-9">
+                      <SelectValue :placeholder="$t('quality')" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="quality in videoQualityOptions"
+                        :key="quality.id"
+                        :value="quality.id"
+                      >
+                        {{ $t(quality.labelKey) }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div class="space-y-1.5">
+                  <Label class="text-xs text-muted-foreground">
+                    {{ $t("fps") }}
+                  </Label>
+                  <Select v-model="selectedFrameRate">
+                    <SelectTrigger class="w-full h-9">
+                      <SelectValue :placeholder="$t('fps')" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="option in frameRateOptions"
+                        :key="option.value"
+                        :value="option.value"
+                      >
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
             <div class="space-y-2">
               <Label
                 class="text-xs text-muted-foreground uppercase tracking-wider font-semibold"
@@ -109,6 +197,22 @@
               <Label for="include-audio" class="text-sm font-normal">
                 {{ $t("includeAudio") }}
               </Label>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
+              <div class="space-y-0.5">
+                <Label for="high-quality-audio" class="text-sm font-medium">
+                  {{ $t("highQualityAudio") }}
+                </Label>
+                <p class="text-xs text-muted-foreground">
+                  {{ $t("highQualityAudioDescription") }}
+                </p>
+              </div>
+              <Switch
+                id="high-quality-audio"
+                v-model="highQualityAudio"
+                :disabled="!includeAudio"
+              />
             </div>
 
             <div
@@ -230,8 +334,136 @@ const isCleaningUp = ref(false);
 const wsUrl = useWebSocketUrl();
 
 const includeAudio = ref(true);
+const highQualityAudio = ref(true);
 const selectedAudioSource = ref("all");
 const selectedPresetId = ref("");
+
+const streamSettingsStorageKey = "helium-stream-settings";
+
+type VideoQualityId = "dataSaver" | "standard" | "sharp" | "ultra";
+type FrameRateValue = "24" | "30" | "60";
+
+interface QualityPreset {
+  id: string;
+  labelKey: string;
+  summaryKey: string;
+  quality: VideoQualityId;
+  frameRate: FrameRateValue;
+}
+
+interface VideoQualityOption {
+  id: VideoQualityId;
+  labelKey: string;
+  width: number;
+  height: number;
+  maxBitrate: number;
+  contentHint: "motion" | "detail";
+}
+
+interface FrameRateOption {
+  value: FrameRateValue;
+  label: string;
+}
+
+interface StoredStreamSettings {
+  videoQuality?: VideoQualityId;
+  frameRate?: FrameRateValue;
+  includeAudio?: boolean;
+  highQualityAudio?: boolean;
+  audioSource?: string;
+}
+
+const qualityPresets: QualityPreset[] = [
+  {
+    id: "speed",
+    labelKey: "preferSpeed",
+    summaryKey: "preferSpeedSummary",
+    quality: "dataSaver",
+    frameRate: "24",
+  },
+  {
+    id: "balanced",
+    labelKey: "balanced",
+    summaryKey: "balancedSummary",
+    quality: "standard",
+    frameRate: "30",
+  },
+  {
+    id: "quality",
+    labelKey: "preferQuality",
+    summaryKey: "preferQualitySummary",
+    quality: "sharp",
+    frameRate: "30",
+  },
+  {
+    id: "cinematic",
+    labelKey: "highMotion",
+    summaryKey: "highMotionSummary",
+    quality: "standard",
+    frameRate: "60",
+  },
+];
+
+const videoQualityOptions: VideoQualityOption[] = [
+  {
+    id: "dataSaver",
+    labelKey: "dataSaver",
+    width: 1280,
+    height: 720,
+    maxBitrate: 1_200_000,
+    contentHint: "detail",
+  },
+  {
+    id: "standard",
+    labelKey: "standard",
+    width: 1920,
+    height: 1080,
+    maxBitrate: 2_800_000,
+    contentHint: "detail",
+  },
+  {
+    id: "sharp",
+    labelKey: "sharp",
+    width: 2560,
+    height: 1440,
+    maxBitrate: 5_000_000,
+    contentHint: "detail",
+  },
+  {
+    id: "ultra",
+    labelKey: "ultra",
+    width: 3840,
+    height: 2160,
+    maxBitrate: 8_000_000,
+    contentHint: "detail",
+  },
+];
+
+const frameRateOptions: FrameRateOption[] = [
+  { value: "24", label: "24 FPS" },
+  { value: "30", label: "30 FPS" },
+  { value: "60", label: "60 FPS" },
+];
+
+const selectedVideoQuality = ref<VideoQualityId>("standard");
+const selectedFrameRate = ref<FrameRateValue>("30");
+
+const activeQualityPreset = computed(
+  () =>
+    videoQualityOptions.find(
+      (quality) => quality.id === selectedVideoQuality.value,
+    ) ?? videoQualityOptions[1]!,
+);
+
+const activeFrameRate = computed(() => Number(selectedFrameRate.value));
+
+const activeContentHint = computed(() =>
+  selectedFrameRate.value === "60" ? "motion" : activeQualityPreset.value.contentHint,
+);
+
+const audioMaxBitrate = computed(() =>
+  highQualityAudio.value ? 128_000 : 64_000,
+);
 
 const {
   isElectron,
@@ -249,6 +481,7 @@ const {
 } = useElectron();
 
 onMounted(async () => {
+  restoreStreamSettings();
   await getPlatformInfo();
 
   if (platformInfo.value?.isLinux && platformInfo.value?.supportsVenmic) {
@@ -280,6 +513,95 @@ watch([localStream, locale], async ([stream]) => {
   );
 });
 
+watch(
+  [selectedVideoQuality, selectedFrameRate, highQualityAudio],
+  async () => {
+    persistStreamSettings();
+
+    if (!localStream.value) return;
+
+    await applyCurrentStreamSettings();
+    toast.success(t("streamQualityUpdated"));
+  },
+);
+
+watch([includeAudio, selectedAudioSource], () => {
+  persistStreamSettings();
+});
+
+function isVideoQualityId(value: unknown): value is VideoQualityId {
+  return (
+    typeof value === "string" &&
+    videoQualityOptions.some((quality) => quality.id === value)
+  );
+}
+
+function isFrameRateValue(value: unknown): value is FrameRateValue {
+  return (
+    typeof value === "string" &&
+    frameRateOptions.some((option) => option.value === value)
+  );
+}
+
+function restoreStreamSettings(): void {
+  const rawSettings = localStorage.getItem(streamSettingsStorageKey);
+
+  if (!rawSettings) return;
+
+  try {
+    const settings = JSON.parse(rawSettings) as StoredStreamSettings;
+
+    if (isVideoQualityId(settings.videoQuality)) {
+      selectedVideoQuality.value = settings.videoQuality;
+    }
+    if (isFrameRateValue(settings.frameRate)) {
+      selectedFrameRate.value = settings.frameRate;
+    }
+    if (typeof settings.includeAudio === "boolean") {
+      includeAudio.value = settings.includeAudio;
+    }
+    if (typeof settings.highQualityAudio === "boolean") {
+      highQualityAudio.value = settings.highQualityAudio;
+    }
+    if (typeof settings.audioSource === "string") {
+      selectedAudioSource.value = settings.audioSource;
+    }
+  } catch (error) {
+    console.warn("Failed to restore stream settings:", error);
+  }
+}
+
+function persistStreamSettings(): void {
+  const settings: StoredStreamSettings = {
+    videoQuality: selectedVideoQuality.value,
+    frameRate: selectedFrameRate.value,
+    includeAudio: includeAudio.value,
+    highQualityAudio: highQualityAudio.value,
+    audioSource: selectedAudioSource.value,
+  };
+
+  localStorage.setItem(streamSettingsStorageKey, JSON.stringify(settings));
+}
+
+function applyQuickPreset(preset: QualityPreset): void {
+  selectedVideoQuality.value = preset.quality;
+  selectedFrameRate.value = preset.frameRate;
+}
+
+function isSelectedQuickPreset(preset: QualityPreset): boolean {
+  return (
+    selectedVideoQuality.value === preset.quality &&
+    selectedFrameRate.value === preset.frameRate
+  );
+}
+
+async function applyCurrentStreamSettings(): Promise<void> {
+  if (!localStream.value) return;
+
+  await applyQualityPresetToStream(localStream.value);
+  await applyQualityPresetToPeerConnections();
+}
+
 async function refreshAudioSources() {
   await getVenmicSources();
 }
@@ -287,6 +609,177 @@ async function refreshAudioSources() {
 async function copyCode() {
   await navigator.clipboard.writeText(streamerStore.code);
   toast.success(t("codeCopied"));
+}
+
+function getDisplayMediaConstraints(): DisplayMediaStreamOptions {
+  const preset = activeQualityPreset.value;
+  const frameRate = activeFrameRate.value;
+  const shouldRequestAudio =
+    isElectron.value && includeAudio.value && supportsAudioScreenShare.value;
+
+  return {
+    video: {
+      width: { ideal: preset.width },
+      height: { ideal: preset.height },
+      frameRate: { ideal: frameRate, max: frameRate },
+    },
+    audio: shouldRequestAudio
+      ? {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        }
+      : false,
+  };
+}
+
+async function applyQualityPresetToSender(
+  sender: RTCRtpSender,
+): Promise<void> {
+  const preset = activeQualityPreset.value;
+  const frameRate = activeFrameRate.value;
+  const parameters = sender.getParameters();
+
+  if (!parameters.encodings || parameters.encodings.length === 0) {
+    return;
+  }
+
+  const [encoding] = parameters.encodings;
+  encoding.maxBitrate = preset.maxBitrate;
+  encoding.maxFramerate = frameRate;
+
+  await sender.setParameters(parameters);
+}
+
+async function applyAudioQualityToSender(sender: RTCRtpSender): Promise<void> {
+  const parameters = sender.getParameters();
+
+  if (!parameters.encodings || parameters.encodings.length === 0) {
+    return;
+  }
+
+  const [encoding] = parameters.encodings;
+  encoding.maxBitrate = audioMaxBitrate.value;
+
+  await sender.setParameters(parameters);
+}
+
+async function safelyApplySenderSettings(
+  sender: RTCRtpSender,
+): Promise<void> {
+  try {
+    if (sender.track?.kind === "video") {
+      await applyQualityPresetToSender(sender);
+    }
+    if (sender.track?.kind === "audio") {
+      await applyAudioQualityToSender(sender);
+    }
+  } catch (error) {
+    console.warn("Failed to apply stream sender settings:", error);
+  }
+}
+
+function withVideoBitrateHints(sdp: string): string {
+  const lines = sdp.split("\r\n");
+  const videoLineIndex = lines.findIndex((line) => line.startsWith("m=video"));
+
+  if (videoLineIndex === -1) return sdp;
+
+  const nextMediaLineIndex = lines.findIndex(
+    (line, index) => index > videoLineIndex && line.startsWith("m="),
+  );
+  const videoSectionEnd =
+    nextMediaLineIndex === -1 ? lines.length : nextMediaLineIndex;
+  const maxBitrateKbps = Math.round(activeQualityPreset.value.maxBitrate / 1000);
+  const startBitrateKbps = Math.min(
+    maxBitrateKbps,
+    Math.max(1_000, Math.round(maxBitrateKbps * 0.75)),
+  );
+  const payloadTypes = lines[videoLineIndex]!.split(" ").slice(3);
+  const tunedPayloadTypes = payloadTypes.filter((payloadType) => {
+    const rtmap = lines
+      .slice(videoLineIndex, videoSectionEnd)
+      .find((line) => line.startsWith(`a=rtmap:${payloadType} `));
+
+    return /\b(VP8|VP9|H264|AV1)\//i.test(rtmap ?? "");
+  });
+
+  const hasBandwidthHint = lines
+    .slice(videoLineIndex, videoSectionEnd)
+    .some((line) => line.startsWith("b=AS:") || line.startsWith("b=TIAS:"));
+
+  if (!hasBandwidthHint) {
+    const connectionLineIndex = lines.findIndex(
+      (line, index) =>
+        index > videoLineIndex &&
+        index < videoSectionEnd &&
+        line.startsWith("c="),
+    );
+
+    if (connectionLineIndex !== -1) {
+      lines.splice(connectionLineIndex + 1, 0, `b=AS:${maxBitrateKbps}`);
+    }
+  }
+
+  tunedPayloadTypes.forEach((payloadType) => {
+    const fmtpIndex = lines.findIndex(
+      (line, index) =>
+        index > videoLineIndex &&
+        index < videoSectionEnd &&
+        line.startsWith(`a=fmtp:${payloadType} `),
+    );
+    const bitrateHint = `x-google-start-bitrate=${startBitrateKbps};x-google-max-bitrate=${maxBitrateKbps}`;
+
+    if (fmtpIndex !== -1) {
+      if (!lines[fmtpIndex]!.includes("x-google-start-bitrate")) {
+        lines[fmtpIndex] = `${lines[fmtpIndex]};${bitrateHint}`;
+      }
+      return;
+    }
+
+    const rtmapIndex = lines.findIndex(
+      (line, index) =>
+        index > videoLineIndex &&
+        index < videoSectionEnd &&
+        line.startsWith(`a=rtmap:${payloadType} `),
+    );
+
+    if (rtmapIndex !== -1) {
+      lines.splice(rtmapIndex + 1, 0, `a=fmtp:${payloadType} ${bitrateHint}`);
+    }
+  });
+
+  return lines.join("\r\n");
+}
+
+async function applyQualityPresetToPeerConnections(): Promise<void> {
+  const senders = Object.values(streamerStore.peerConnections).flatMap((pc) =>
+    pc.getSenders(),
+  );
+
+  await Promise.all(
+    senders.map((sender) => safelyApplySenderSettings(sender)),
+  );
+}
+
+async function applyQualityPresetToStream(stream: MediaStream): Promise<void> {
+  const preset = activeQualityPreset.value;
+  const frameRate = activeFrameRate.value;
+  const [videoTrack] = stream.getVideoTracks();
+
+  if (!videoTrack) return;
+
+  videoTrack.contentHint = activeContentHint.value;
+
+  try {
+    await videoTrack.applyConstraints({
+      width: { ideal: preset.width },
+      height: { ideal: preset.height },
+      frameRate: { ideal: frameRate, max: frameRate },
+    });
+  } catch (error) {
+    console.warn("Failed to apply capture quality constraints:", error);
+  }
 }
 
 function notifyRoomClosed() {
@@ -351,13 +844,23 @@ const { send, close: closeWebSocket } = useWebSocket(wsUrl, {
       };
 
       const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
+      const tunedOffer: RTCSessionDescriptionInit = {
+        type: offer.type,
+        sdp: offer.sdp ? withVideoBitrateHints(offer.sdp) : undefined,
+      };
+      await peerConnection.setLocalDescription(tunedOffer);
+
+      void Promise.all(
+        peerConnection
+          .getSenders()
+          .map((sender) => safelyApplySenderSettings(sender)),
+      );
 
       send(
         JSON.stringify({
           event: "offer",
           targetId: message.viewerId,
-          sdp: offer,
+          sdp: peerConnection.localDescription,
           iceServers: streamerStore.iceServers,
         }),
       );
@@ -415,19 +918,11 @@ async function startScreenShare() {
       }
     }
 
-    const shouldRequestAudio =
-      isElectron.value && includeAudio.value && supportsAudioScreenShare.value;
+    const stream = await navigator.mediaDevices.getDisplayMedia(
+      getDisplayMediaConstraints(),
+    );
 
-    const stream = await navigator.mediaDevices.getDisplayMedia({
-      video: true,
-      audio: shouldRequestAudio
-        ? {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
-          }
-        : false,
-    });
+    await applyQualityPresetToStream(stream);
 
     localStream.value = stream;
 
@@ -471,45 +966,50 @@ async function changeScreenShareSource() {
       }
     }
 
-    const shouldRequestAudio =
-      isElectron.value && includeAudio.value && supportsAudioScreenShare.value;
-
-    const newStream = await navigator.mediaDevices.getDisplayMedia({
-      video: true,
-      audio: shouldRequestAudio,
-    });
+    const newStream = await navigator.mediaDevices.getDisplayMedia(
+      getDisplayMediaConstraints(),
+    );
 
     if (!localStream.value) return;
 
     const newVideoTrack = newStream.getVideoTracks()[0];
     const newAudioTrack = newStream.getAudioTracks()[0];
 
+    await applyQualityPresetToStream(newStream);
+
     newVideoTrack!.onended = () => {
       console.log("Screen sharing stopped by user");
       stopStreaming();
     };
 
-    Object.values(streamerStore.peerConnections).forEach((pc) => {
-      const senders = pc.getSenders();
+    const peerUpdates = Object.values(streamerStore.peerConnections).map(
+      async (pc) => {
+        const senders = pc.getSenders();
 
-      const videoSender = senders.find(
-        (sender) => sender.track?.kind === "video",
-      );
-      if (videoSender) {
-        videoSender.replaceTrack(newVideoTrack!);
-      }
-
-      if (newAudioTrack) {
-        const audioSender = senders.find(
-          (sender) => sender.track?.kind === "audio",
+        const videoSender = senders.find(
+          (sender) => sender.track?.kind === "video",
         );
-        if (audioSender) {
-          audioSender.replaceTrack(newAudioTrack);
-        } else {
-          pc.addTrack(newAudioTrack, newStream);
+        if (videoSender) {
+          await videoSender.replaceTrack(newVideoTrack!);
+          await safelyApplySenderSettings(videoSender);
         }
-      }
-    });
+
+        if (newAudioTrack) {
+          const audioSender = senders.find(
+            (sender) => sender.track?.kind === "audio",
+          );
+          if (audioSender) {
+            await audioSender.replaceTrack(newAudioTrack);
+            await safelyApplySenderSettings(audioSender);
+          } else {
+            const sender = pc.addTrack(newAudioTrack, newStream);
+            await safelyApplySenderSettings(sender);
+          }
+        }
+      },
+    );
+
+    await Promise.all(peerUpdates);
 
     localStream.value.getTracks().forEach((track) => {
       track.stop();
